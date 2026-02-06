@@ -9,40 +9,31 @@ Every project is fully documented in Markdown, reproducible, and focused on atta
 ---
 
 ### 📦 Quick Navigation
-[Beginner](#beginner-projects) • [Intermediate](#intermediate-projects) • [Advanced](#advanced-projects)
+[Projects](#projects) • [Beginner](#beginner-projects) • [Intermediate](#intermediate-projects) • [Advanced](#advanced-projects)
+
+---
+
+### 🛠️ Tech Stack
+<img src="https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white" />
+<img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" />
+<img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" />
+<img src="https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white" />
+<img src="https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=white" />
+<img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi" />
+<img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" />
+
+---
+
+### 📊 Repository Stats
+<img src="https://img.shields.io/github/languages/top/zappybird/Cyber-Projects" />
+<img src="https://img.shields.io/github/last-commit/zappybird/Cyber-Projects" />
+<img src="https://img.shields.io/github/repo-size/zappybird/Cyber-Projects" />
+
+---
 
 </div>
 
 ---
 
-# 🧭 Projects
-
-Below is the full catalog of cybersecurity projects, grouped by difficulty.
-
----
-
-# 🟢 Beginner Projects
-
-<!-- Paste your entire Beginner table here (all rows, no placeholders) -->
-
----
-
-# 🟡 Intermediate Projects
-
-<!-- Paste your entire Intermediate table here -->
-
----
-
-# 🔴 Advanced Projects
-
-<!-- Paste your entire Advanced table here -->
-
----
-
-<div align="center">
-
-## 📚 Learn More  
-Explore extended write‑ups in the `/SYNOPSES` directory.
-
-</div>
+# 📁 Repository Structure
 
