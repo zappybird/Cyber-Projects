@@ -1,0 +1,23 @@
+2024-01-12 14:22:10 INFO [AuthService] User login successful for user: admin
+2024-01-12 14:22:11 WARNING [AuthService] Suspicious login attempt detected from IP 192.168.1.44
+2024-01-12 14:22:15 ERROR [Database] Connection timeout while querying user table
+2024-01-12 14:22:16 INFO [API] GET /users returned 200 OK
+2024-01-12 14:22:20 ERROR [Database] Failed to execute query: SELECT * FROM users WHERE id=12345
+2024-01-12 14:22:25 CRITICAL [PaymentService] Payment processing failed for transaction ID 9f3a1c2e-4b22-4d8a-bc1f-8a9d2c1e7f11
+2024-01-12 14:22:30 INFO [Scheduler] Running scheduled cleanup task
+2024-01-12 14:22:31 WARNING [Scheduler] Cleanup task took longer than expected
+2024-01-12 14:22:35 ERROR [AuthService] User authentication failed for user: guest
+2024-01-12 14:22:40 DEBUG [Cache] Cache miss for key: session_abc123
+2024-01-12 14:22:41 INFO [Cache] Cache refreshed for key: session_abc123
+2024-01-12 14:22:45 ERROR [Network] Connection lost to upstream service
+2024-01-12 14:22:50 INFO [System] Health check passed
+2024-01-12 14:22:55 FATAL [Database] Database corruption detected in table: orders
+2024-01-12 14:23:00 WARNING [Network] High latency detected: 450ms
+2024-01-12 14:23:05 INFO [API] POST /orders returned 201 Created
+2024-01-12 14:23:10 ERROR [PaymentService] Payment declined for card ending in 4421
+2024-01-12 14:23:15 INFO [System] Background worker started
+2024-01-12 14:23:20 DEBUG [Worker] Processing job ID 123456
+2024-01-12 14:23:25 ERROR [Worker] Failed to process job ID 123456 due to timeout
+Malformed line without timestamp or severity
+Another bad line: something went wrong but no format
+2024-01-12 14:23:30 INFO [API] GET /status returned 200 OK
