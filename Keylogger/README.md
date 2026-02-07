@@ -139,5 +139,3 @@ Unauthorized keylogging is illegal in many jurisdictions.
 Use responsibly and ethically.
 
 <hr />
-
-<h2>📄 License</h2>
