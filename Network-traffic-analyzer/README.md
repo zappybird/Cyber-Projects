@@ -135,9 +135,7 @@ netanal chart traffic.pcap --type all -d ./charts/
 |  ├── output.py # Rich console formatting
 |  ├── constants.py # Configuration values
 |  └── exceptions.py # Custom exception hierarchy
-├── tests/
-│   ├── test_filters.py   # BPF filter builder tests
-│   └── test_models.py    # Data model tests
+|
 └── pyproject.toml        # Project dependencies and metadata
 </code></pre>
 
