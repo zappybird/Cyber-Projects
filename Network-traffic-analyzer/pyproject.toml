@@ -28,7 +28,7 @@ Issues = "https://github.com/CarterPerez-dev/Cybersecurity-Projects/issues"
 Changelog = "https://github.com/CarterPerez-dev/Cybersecurity-Projects/blob/main/CHANGELOG.md"
 
 [project.scripts]
-netanal = "netanal.app:app"
+netanal = "netanal.main:run"
 
 [build-system]
 requires = [

@@ -123,17 +123,18 @@ netanal chart traffic.pcap --type all -d ./charts/
 
 <pre><code>network-traffic-analyzer/
 ├── src/netanal/
-│   ├── capture.py        # Producer-consumer packet capture engine
-│   ├── analyzer.py       # Protocol identification and packet parsing
-│   ├── filters.py        # BPF filter builder with validation
-│   ├── statistics.py     # Thread-safe stats collector
-│   ├── models.py         # Data structures (PacketInfo, Protocol enum)
-│   ├── visualization.py  # Matplotlib chart generation
-│   ├── export.py         # JSON/CSV data export
-│   ├── output.py         # Rich console formatting
-│   ├── main.py           # Typer CLI command definitions
-│   ├── constants.py      # Configuration values
-│   └── exceptions.py     # Custom exception hierarchy
+|  ├── capture.py # Packet capture engine
+|  ├── parser.py # Packet parsing
+|  ├── detectors.py # Detection logic
+|  ├── stats.py # Statistics aggregation
+|  ├── main.py # Typer CLI entrypoint
+|  ├── models.py # PacketInfo, Protocol, Stats dataclasses
+|  ├── filters.py # BPF filter builder
+|  ├── visualization.py # Matplotlib charts
+|  ├── export.py # JSON/CSV export
+|  ├── output.py # Rich console formatting
+|  ├── constants.py # Configuration values
+|  └── exceptions.py # Custom exception hierarchy
 ├── tests/
 │   ├── test_filters.py   # BPF filter builder tests
 │   └── test_models.py    # Data model tests
