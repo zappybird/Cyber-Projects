@@ -36,6 +36,77 @@ avoid packet loss under load, and turn raw packets into actionable insights like
 
 <hr />
 
+<h2>🖥️ Setting Up the VM (VirtualBox)</h2>
+
+<p>
+If you prefer to run this lab inside a virtual machine instead of directly on a Raspberry Pi, VirtualBox provides an easy and isolated environment for testing packet capture tools.
+Below is a step-by-step guide to setting up a Linux VM suitable for running the Network Traffic Analyzer.
+</p>
+
+<h3>1. Download and Install VirtualBox</h3>
+<ul>
+<li>Visit: <a href="https://www.virtualbox.org/">https://www.virtualbox.org/</a></li>
+<li>Download the latest version for your operating system.</li>
+<li>Install using the default settings.</li>
+</ul>
+
+<h3>2. Download a Linux ISO</h3>
+<p>Recommended options:</p>
+<ul>
+<li><strong>Ubuntu Server</strong> (lightweight, ideal for CLI tools)</li>
+<li><strong>Ubuntu Desktop</strong> (if you prefer a GUI)</li>
+<li><strong>Debian</strong> (stable and minimal)</li>
+</ul>
+
+<h3>3. Create a New Virtual Machine</h3>
+<ul>
+<li>Open VirtualBox → <strong>New</strong></li>
+<li>Name: <code>NetAnal-VM</code></li>
+<li>Type: <strong>Linux</strong></li>
+<li>Version: <strong>Ubuntu (64-bit)</strong> or your chosen distro</li>
+<li>Memory: <strong>2GB–4GB</strong></li>
+<li>Disk: <strong>20GB</strong> dynamically allocated</li>
+</ul>
+
+<h3>4. Configure Networking</h3>
+<p>
+To capture real traffic, the VM must be attached to a network mode that exposes actual packets.
+</p>
+
+<ul>
+<li>Go to <strong>Settings → Network</strong></li>
+<li>Set <strong>Adapter 1</strong> to:
+<ul>
+<li><strong>Bridged Adapter</strong> (recommended — VM behaves like a real device on your LAN)</li>
+<li>or <strong>Host-Only Adapter</strong> (isolated testing)</li>
+</ul>
+</li>
+<li>Enable <strong>Promiscuous Mode → Allow All</strong></li>
+</ul>
+
+<p><strong>Why this matters:</strong> Promiscuous mode allows the VM to see packets not addressed directly to it, which is essential for realistic packet capture.</p>
+
+<h3>5. Boot and Install Linux</h3>
+<ul>
+<li>Start the VM</li>
+<li>Select your downloaded ISO</li>
+<li>Install Linux using default settings</li>
+</ul>
+
+<h3>6. Install Python 3.14</h3>
+<p>Inside the VM:</p>
+<pre><code>sudo apt update
+sudo apt install python3.14 python3.14-venv python3.14-dev
+</code></pre>
+
+<h3>7. Install Git</h3>
+<pre><code>sudo apt install git
+</code></pre>
+
+<p>Your VM is now ready to run the Network Traffic Analyzer.</p>
+
+<hr />
+
 <h2>🛠 Tools</h2>
 
 <h3>Python 3.14 + Virtual Environment</h3>
