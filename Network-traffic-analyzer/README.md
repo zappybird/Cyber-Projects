@@ -14,8 +14,8 @@ bandwidth sampling, and kernel-level BPF filtering.
 
 <ul>
   <li><a href="./docs/00-OVERVIEW.md">00 – Overview</a></li>
-  <li><a href="./docs/01-LAB-GUIDE.md">01 – Lab Guide (Setup & Usage)</a></li>
-  <li><a href="./docs/04-CHALLENGES.md">04 – Challenges & Future Work</a></li>
+  <li><a href="./docs/04-IMPLEMENTATION.md">04 – Implementation</a></li>
+  <li><a href="./docs/05-CHALLENGES.md">05 – Challenges & Future Work</a></li>
 </ul>
 
 <hr />
