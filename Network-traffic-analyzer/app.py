@@ -1,7 +1,7 @@
-from analyzer.capture import capture_packets
-from analyzer.parser import parse_packet
-from analyzer.detectors import detect_syn_flood
-from analyzer.stats import update_stats
+from netanal.capture import capture_packets
+from netanal.parser import parse_packet
+from netanal.detectors import detect_syn_flood
+from netanal.stats import update_stats
 
 def handle_packet(pkt):
     parsed = parse_packet(pkt)
