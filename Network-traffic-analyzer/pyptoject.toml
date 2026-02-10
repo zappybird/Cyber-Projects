@@ -28,7 +28,7 @@ Issues = "https://github.com/CarterPerez-dev/Cybersecurity-Projects/issues"
 Changelog = "https://github.com/CarterPerez-dev/Cybersecurity-Projects/blob/main/CHANGELOG.md"
 
 [project.scripts]
-netanal = "netanal.main:app"
+netanal = "analyzer.app:app"
 
 [build-system]
 requires = [
@@ -37,16 +37,14 @@ requires = [
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = [
-    "src/netanal",
-]
+packages = ["analyzer"]
 
 [tool.ruff]
 target-version = "py314"
 line-length = 88
 preview = true
 src = [
-    "src/netanal",
+    "analyzer",
 ]
 
 [tool.ruff.lint]
@@ -192,7 +190,7 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 source = [
-    "src/netanal",
+    "analyzer",
 ]
 
 [tool.coverage.report]
@@ -204,7 +202,7 @@ exclude_lines = [
 
 [tool.ty.src]
 include = [
-    "src/netanal",
+    "analyzer",
     "tests",
 ]
 exclude = [
@@ -215,7 +213,7 @@ respect-ignore-files = true
 [tool.ty.environment]
 python-version = "3.14"
 root = [
-    "./src/netanal",
+    "./analyzer",
 ]
 python = "./.venv"
 
