@@ -1,0 +1,60 @@
+<p align="center">
+  <a href="./01-OVERVIEW.md">Overview</a> •
+  <a href="./02-CONCEPTS.md">Concepts</a> •
+  <a href="./03-ARCHITECTURE.md">Architecture</a> •
+  <a href="./04-IMPLEMENTATION.md">Implementation</a> •
+  <a href="./05-CHALLENGES.md">Challenges</a>
+</p>
+
+<hr />
+
+<h1>📘 Network Traffic Analyzer — Overview</h1>
+
+<p>
+This project demonstrates how a modern, Python-based network traffic analyzer is built and operated end-to-end. 
+It focuses on safe, structured packet capture, protocol classification, and statistics aggregation using a producer–consumer architecture, 
+Scapy for packet dissection, and Rich/Matplotlib for visualization.
+</p>
+
+<p>
+By running this on a Raspberry Pi (or Pi-hosted VM), you get a practical feel for how real monitoring tools ingest traffic, 
+avoid packet loss under load, and turn raw packets into actionable insights like protocol distribution, bandwidth trends, and top talkers.
+</p>
+
+<hr />
+
+<h2>🎯 Objective</h2>
+
+<ul>
+  <li>Understand how the capture engine uses a bounded queue and background threads to avoid dropping packets.</li>
+  <li>Observe live protocol distribution, bandwidth, and endpoint statistics on a real network segment.</li>
+  <li>See how BPF filters offload work to the kernel for performance and safety.</li>
+  <li>Connect the CLI commands (<code>netanal capture</code>, filters, stats) to the underlying modules in <code>src/netanal/</code>.</li>
+</ul>
+
+<hr />
+
+<h2>🧪 Lab Environment</h2>
+
+<ul>
+  <li><strong>Host:</strong> Raspberry Pi (or Pi-hosted VM) running a recent Linux distribution.</li>
+  <li><strong>Python:</strong> Python 3.14 installed on the Pi/VM.</li>
+  <li><strong>Project:</strong> Your <code>Cyber-Projects</code> repo cloned locally.</li>
+  <li><strong>Networking:</strong> Physical interface (<code>eth0</code>, <code>wlan0</code>) or VM interface (<code>ens33</code>).</li>
+  <li><strong>Permissions:</strong> Root or CAP_NET_RAW capability for packet capture.</li>
+</ul>
+
+<hr />
+
+<h2>🔒 Educational Purpose</h2>
+
+<p>
+This lab is intended solely for defensive security and systems engineering education in a controlled environment. 
+It is designed to build intuition for how real-world network monitoring tools are architected: 
+from safe packet capture and protocol identification to thread-safe statistics and kernel-assisted filtering.
+</p>
+
+<p>
+By experimenting on a Raspberry Pi or VM, you can safely explore how traffic patterns, filters, and load affect the analyzer’s behavior 
+and connect those observations back to the underlying implementation in <code>src/netanal/</code>.
+</p>
