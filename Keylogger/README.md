@@ -9,7 +9,7 @@ Use it only on systems you own and control.
 
 <hr />
 
-<h2>✨ Features</h2>
+<h2> Features</h2>
 
 - Groups typed characters into full words
 - Adds a **single timestamp per word**
@@ -42,7 +42,7 @@ Keylogger/
 
 <hr />
 
-<h2>⚙️ How It Works</h2>
+<h2> How It Works</h2>
 
 This keylogger focuses on **clarity and educational value**, not stealth.  
 Here’s the high‑level flow:
@@ -76,7 +76,7 @@ Pressing **ESC**:
 
 <hr />
 
-<h2>📦 Installation (from source)</h2>
+<h2> Installation (from source)</h2>
 
 <h3>1. Clone the repository</h3>
 <pre><code>git clone https://github.com/zappybird/Keylogger.git
@@ -105,7 +105,7 @@ cd Keylogger
 
 <hr />
 
-<h2>⚙️ Configuration</h2>
+<h2> Configuration</h2>
 
 The log file path is defined in <code>config.ini</code>:
 
@@ -118,7 +118,7 @@ The logger will automatically rotate the file once it exceeds 1MB.
 
 <hr />
 
-<h2>🧪 Running Tests</h2>
+<h2> Running Tests</h2>
 
 This project includes basic unit tests for logging behavior and word grouping.
 
@@ -129,7 +129,7 @@ Run them with:
 
 <hr />
 
-<h2>🔒 Legal & Ethical Notice</h2>
+<h2> Legal & Ethical Notice</h2>
 
 This project is provided for **educational and defensive purposes only**.  
 You must **never** use it to monitor another person’s device, activity, or keystrokes.
