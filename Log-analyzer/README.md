@@ -1,4 +1,4 @@
-<h2>📦 Installation (from source)</h2>
+<h2> Installation (from source)</h2>
 
 <h3>1. Clone the repository</h3>
 <pre><code>git clone https://github.com/zappybird/Log-analyzer.git
@@ -27,7 +27,7 @@ cd Log-analyzer
 
 <hr />
 
-<h2>🖥️ Running the Standalone Executable</h2>
+<h2> Running the Standalone Executable</h2>
 
 <p>
 A Windows <code>.exe</code> version is available under:
