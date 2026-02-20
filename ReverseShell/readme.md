@@ -1,4 +1,4 @@
-<h2>📘 Reverse Shell Lab</h2>
+<h2> Reverse Shell Lab</h2>
 
 <p>
 This project demonstrates how reverse shells work at a fundamental level and why they are commonly used to bypass inbound firewall restrictions. 
@@ -8,7 +8,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>🎯 Objective</h2>
+<h2> Objective</h2>
 
 <ul>
   <li>Understand how reverse shells establish remote access.</li>
@@ -19,7 +19,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>🧪 Lab Environment</h2>
+<h2> Lab Environment</h2>
 
 <ul>
   <li><strong>Attacker:</strong> Raspberry Pi running Ubuntu Server</li>
@@ -30,7 +30,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>🛠 Tools</h2>
+<h2> Tools</h2>
 
 <h3>Netcat (OpenBSD)</h3>
 <p>A lightweight networking utility used for reading and writing data across TCP/UDP connections. In this lab, Netcat acts as the listener waiting for the target to connect back.</p>
@@ -40,7 +40,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>📦 Installing Netcat</h2>
+<h2> Installing Netcat</h2>
 
 <h3>1. Update package list</h3>
 <pre><code>sudo apt update
@@ -56,7 +56,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>🎧 Setting Up the Listener (Attacker)</h2>
+<h2> Setting Up the Listener (Attacker)</h2>
 
 <h3>1. Switch to root</h3>
 <pre><code>sudo su -
@@ -82,7 +82,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>🖥️ Executing the Reverse Shell (Target VM)</h2>
+<h2> Executing the Reverse Shell (Target VM)</h2>
 
 <p>Run the following command inside the Ubuntu VM:</p>
 
@@ -93,7 +93,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>📡 Listener Output</h2>
+<h2> Listener Output</h2>
 
 <p>Once the reverse shell connects, the listener will confirm:</p>
 
@@ -106,7 +106,7 @@ firewall limitations, and early indicators of compromise.
 
 <hr />
 
-<h2>🔒 Educational Purpose</h2>
+<h2> Educational Purpose</h2>
 
 <p>
 This project is intended solely for defensive security learning in a controlled, isolated environment. 
