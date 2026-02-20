@@ -1,11 +1,11 @@
-# 🧭 Projects
+# Projects
 
 A collection of hands‑on cybersecurity projects.  
 Each project links directly to its source code and documentation inside this repository.
 
 ---
 
-## 🟢 Beginner Projects
+## Beginner Projects
 
 | Project | Info | What You'll Learn |
 |---------|------|-------------------|
