@@ -1,4 +1,4 @@
-<h1>📘 Network Traffic Analyzer</h1>
+<h1>  Network Traffic Analyzer</h1>
 
 <p>
 A Python-based packet capture and analysis tool that demonstrates how real monitoring systems ingest, classify, and analyze network traffic.
@@ -8,7 +8,7 @@ bandwidth sampling, and kernel-level BPF filtering.
 
 <hr />
 
-<h2>📚 Documentation</h2>
+<h2> Documentation</h2>
 
 <p>Full documentation is available in the <code>/docs</code> folder:</p>
 
@@ -20,7 +20,7 @@ bandwidth sampling, and kernel-level BPF filtering.
 
 <hr />
 
-<h1>📡 Network Traffic Analyzer</h1>
+<h1> Network Traffic Analyzer</h1>
 
 <h2>What This Is</h2>
 
@@ -176,7 +176,7 @@ netanal chart traffic.pcap --type all -d ./charts/
 </ul>
 
 
-<h2>🔒 Educational Purpose</h2>
+<h2> Educational Purpose</h2>
 
 <p>
 This project is intended for defensive security learning, network engineering education, and understanding packet capture internals.
