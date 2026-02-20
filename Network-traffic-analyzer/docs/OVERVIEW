@@ -7,7 +7,7 @@
 
 <hr />
 
-<h1>📘 Network Traffic Analyzer — Overview</h1>
+<h1> Network Traffic Analyzer — Overview</h1>
 
 <p>
 This project demonstrates how a modern, Python-based network traffic analyzer is built and operated end-to-end. 
@@ -22,7 +22,7 @@ avoid packet loss under load, and turn raw packets into actionable insights like
 
 <hr />
 
-<h2>🎯 Objective</h2>
+<h2> Objective</h2>
 
 <ul>
   <li>Understand how the capture engine uses a bounded queue and background threads to avoid dropping packets.</li>
@@ -33,7 +33,7 @@ avoid packet loss under load, and turn raw packets into actionable insights like
 
 <hr />
 
-<h2>🧪 Lab Environment</h2>
+<h2> Lab Environment</h2>
 
 <ul>
   <li><strong>Host:</strong> Raspberry Pi (or Pi-hosted VM) running a recent Linux distribution.</li>
@@ -45,7 +45,7 @@ avoid packet loss under load, and turn raw packets into actionable insights like
 
 <hr />
 
-<h2>🔒 Educational Purpose</h2>
+<h2> Educational Purpose</h2>
 
 <p>
 This lab is intended solely for defensive security and systems engineering education in a controlled environment. 
