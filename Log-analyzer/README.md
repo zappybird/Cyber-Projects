@@ -1,38 +1,48 @@
-<h2> Installation (from source)</h2>
+# Installation (from source)
 
-<h3>1. Clone the repository</h3>
-<pre><code>git clone https://github.com/zappybird/Log-analyzer.git
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/zappybird/Log-analyzer.git
 cd Log-analyzer
-</code></pre>
+```
 
-<h3>2. Create a virtual environment</h3>
-<pre><code>python -m venv .venv
-</code></pre>
+## 2. Create a virtual environment
 
-<h3>3. Activate it (Windows)</h3>
-<pre><code>.venv\Scripts\activate
-</code></pre>
+```bash
+python -m venv .venv
+```
 
-<h3>4. Install dependencies</h3>
-<pre><code>pip install -r requirements.txt
-</code></pre>
+## 3. Activate it (Windows)
 
-<h3>5. Run the app</h3>
-<pre><code>python app.py
-</code></pre>
+```bash
+.venv\Scripts\activate
+```
 
-<p>Then open your browser to:</p>
-<pre><code>http://127.0.0.1:5000
-</code></pre>
+## 4. Install dependencies
 
-<hr />
+```bash
+pip install -r requirements.txt
+```
 
-<h2> Running the Standalone Executable</h2>
+## 5. Run the app
 
-<p>
-A Windows <code>.exe</code> version is available under:
-<br />
-<strong>GitHub → Releases</strong>
-</p>
+```bash
+python app.py
+```
 
-<p>No Python required. Just download and run.</p>
+Then open your browser to:
+
+```
+http://127.0.0.1:5000
+```
+
+---
+
+## Running the Standalone Executable
+
+A Windows `.exe` version is available under:
+
+**GitHub → Releases**
+
+No Python required. Just download and run.
