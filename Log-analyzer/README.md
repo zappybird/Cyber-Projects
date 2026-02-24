@@ -33,16 +33,16 @@ python app.py
 
 Then open your browser to:
 
-```
+```text
 http://127.0.0.1:5000
 ```
 
 ---
 
-## Running the Standalone Executable
+### Running the Standalone Executable
 
 A Windows `.exe` version is available under:
 
-**GitHub → Releases**
+### GitHub → Releases
 
 No Python required. Just download and run.
