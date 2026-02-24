@@ -23,7 +23,7 @@ Use it only on systems you own and control.
 
 <hr />
 
-<h2>📁 Project Structure</h2>
+<h2> Project Structure</h2>
 
 <pre><code>
 Keylogger/
