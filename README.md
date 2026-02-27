@@ -1,9 +1,5 @@
 # Projects
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/zappybird/Cyber-Projects/main/assets/cyber-grid.gif" width="900" />
-</p>
-
 A collection of hands‑on cybersecurity projects.  
 Each project links directly to its source code and documentation inside this repository.
 
