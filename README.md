@@ -1,7 +1,10 @@
-# Projects
+# Cybersecurity Projects
 
-A collection of hands‑on cybersecurity projects.  
-Each project links directly to its source code and documentation inside this repository.
+![Cybersecurity Projects](https://img.shields.io/badge/Cybersecurity-Projects-blue?style=for-the-badge&logo=target)
+
+## Hands‑on tools, analyzers, and scanners built in Python
+
+ A growing collection of practical cybersecurity projects designed for learning, experimentation, and
 
 ---
 
