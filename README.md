@@ -1,20 +1,9 @@
 # Cybersecurity Projects
 
-![Cybersecurity Terminal Logo](https://github.com/user-attachments/assets/d911b71f-6ad9-45b7-9513-237f83377023)
+![Terminal Hacker Icon](https://img.icons8.com/external-flatart-icons-outline-flatarticons/128/external-terminal-hacker-flatart-icons-outline-flatarticons.png)
 
-Hands‑on tools, analyzers, and scanners built in Python
-
-![stars](https://img.shields.io/github/stars/zappybird/Cybersecurity-Projects?style=flat-square)
-![forks](https://img.shields.io/github/forks/zappybird/Cybersecurity-Projects?style=flat-square)
-![issues](https://img.shields.io/github/issues/zappybird/Cybersecurity-Projects?style=flat-square)
-![license](https://img.shields.io/github/license/zappybird/Cybersecurity-Projects?style=flat-square)
-
-![projects](https://img.shields.io/badge/Cybersecurity-Projects-blue?style=for-the-badge&logo=target)
-![python](https://img.shields.io/badge/Python-Primary_Language-yellow?style=for-the-badge&logo=python)
-
-[![support](https://img.shields.io/static/v1?label=Support&message=%E2%9D%A4&logo=GitHub&color=darkgreen)](https://github.com/zappybird)
-
-> Currently building: Network Scanner enhancements
+![Python Badge](https://img.shields.io/badge/Python-Primary_Language-yellow?style=for-the-badge&logo=python)
+![Security Badge](https://img.shields.io/badge/Focus-Networking_&_Security-black?style=for-the-badge)
 
 ---
 
