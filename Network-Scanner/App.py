@@ -542,3 +542,4 @@ if __name__ == '__main__':
     print("\n  ■ NETWORK SCANNER GUI")
     print("  Open your browser → http://127.0.0.1:5000\n")
     app.run(host='127.0.0.1', port=5000, debug=False)
+    ## test comment for commit
