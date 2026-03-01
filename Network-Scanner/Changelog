@@ -109,6 +109,114 @@
 
 <hr />
 
+<h2>v2.2</h2>
+
+<ul class="entry-list">
+
+  <li class="entry">
+    <span class="tag added">ADDED</span>
+    <div class="entry-body">
+      <strong>Ghost-in-the-Shell intro animation</strong> — on the first user gesture, an animated
+      typewriter sequence prints to <code>#terminalOutput</code> before the user types anything.
+      Text is character-by-character with randomised timing, newline pauses, and per-character
+      sounds. Default intro includes a live timestamp and the scanner header block. Override via
+      <code>init({ intro: { text: '...' } })</code>.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag added">ADDED</span>
+    <div class="entry-body">
+      <strong><code>newlinePauseMs</code> option in <code>typeOut()</code></strong> — configurable
+      extra delay inserted after each <code>\n</code> character for dramatic pacing. Defaults to
+      <code>0</code> in manual calls, <code>160</code>ms in the intro sequence.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag added">ADDED</span>
+    <div class="entry-body">
+      <strong><code>onComplete</code> callback in <code>typeOut()</code></strong> — optional function
+      called when the typewriter animation finishes. Used internally by the intro to auto-focus
+      <code>#cmdInput</code> after the boot sequence completes.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag added">ADDED</span>
+    <div class="entry-body">
+      <strong>Live timestamp in default intro text</strong> — intro text is generated at unlock time
+      (not at parse time) so the timestamp reflects when the user first interacted, not when the
+      page loaded.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag improved">IMPROVED</span>
+    <div class="entry-body">
+      <strong>Root cause fix: AudioContext not unlocking</strong> — the <code>AudioContext</code>
+      is now created <em>inside</em> the gesture event handler (<code>unlock()</code>), not at
+      <code>init()</code> time. Browsers (Chrome, Firefox, Safari) require the context to be created
+      or resumed synchronously within a user-gesture call stack. Creating it at init caused an
+      immediately-suspended context that <code>.resume()</code> could not reliably wake.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag improved">IMPROVED</span>
+    <div class="entry-body">
+      <strong>Two-phase buffer loading</strong> — WAV files are now fetched as raw
+      <code>ArrayBuffer</code>s at <code>init()</code> time via <code>fetch()</code> (no gesture
+      needed). <code>decodeAudioData()</code> is deferred until <code>onUnlocked()</code>, after the
+      <code>AudioContext</code> exists. The <code>.slice(0)</code> clone prevents the
+      <code>decodeAudioData</code> detachment bug on the original buffer.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag improved">IMPROVED</span>
+    <div class="entry-body">
+      <strong>Unlock listeners moved to <code>window</code></strong> — previously attached to
+      <code>document</code>; now attached to <code>window</code> for broadest gesture capture,
+      matching the spec requirement. Manual removal of sibling listeners added alongside
+      <code>{ once: true }</code> for belt-and-suspenders cleanup.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag improved">IMPROVED</span>
+    <div class="entry-body">
+      <strong><code>playBuffer()</code> guard tightened</strong> — now checks
+      <code>audioCtx.state === 'running'</code> explicitly (not just <code>audioUnlocked</code>)
+      before attempting <code>source.start()</code>, preventing silent errors during the brief
+      window between unlock() being called and the context fully resuming.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag improved">IMPROVED</span>
+    <div class="entry-body">
+      <strong><code>typeOut()</code> now uses <code>observerPaused</code> flag</strong> — instead
+      of disconnecting and reconnecting the <code>MutationObserver</code> (which was racey), the
+      observer now checks a boolean flag and skips processing while <code>typeOut()</code> is
+      animating. Observer stays connected throughout, eliminating any missed mutations.
+    </div>
+  </li>
+
+  <li class="entry">
+    <span class="tag changed">CHANGED</span>
+    <div class="entry-body">
+      <strong>Intro text is <code>null</code> by default</strong> — the config stores
+      <code>intro.text: null</code> rather than a hardcoded string. The live timestamp is built at
+      runtime in <code>runIntro()</code> using a local <code>nowTimestamp()</code> helper, ensuring
+      it reflects the actual interaction time rather than page-load time.
+    </div>
+  </li>
+
+</ul>
+
+<hr />
+
 <h2>v2.1</h2>
 
 <ul class="entry-list">
