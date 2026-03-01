@@ -446,9 +446,9 @@ HTML = r"""<!DOCTYPE html>
     output.textContent = '';
 
     window.TerminalSFX.typeOut(text, {
-      charDelay:      36,
-      jitterMs:       14,
-      newlinePauseMs: 130,
+      charDelay:      55,
+      jitterMs:       20,
+      newlinePauseMs: 280,
       onComplete: function () {
         ensureCursor();
         setStatus('READY');
@@ -490,17 +490,23 @@ HTML = r"""<!DOCTYPE html>
   });
 
   // ─── First gesture handler ─────────────────────────────────────────────────
-  // Unlock audio (creates AudioContext inside gesture → guaranteed running),
-  // then show the intro after a brief pause.
+  // Audio unlock must happen inside a user gesture (browser rule).
+  // The visual intro starts immediately on page load — sounds will be silent
+  // until the user first clicks or presses a key, then play normally after that.
 
   function onFirstGesture() {
     window.TerminalSFX.unlock();
-    setTimeout(showIntro, 100);   // slight delay so unlock keydown sound fires first
     // listeners are { once:true } so they auto-remove after firing
   }
 
   window.addEventListener('keydown', onFirstGesture, { once: true, passive: true });
   window.addEventListener('click',   onFirstGesture, { once: true, passive: true });
+
+  // Start the intro animation immediately — no gesture needed for visuals.
+  // Audio kicks in silently until the first interaction unlocks it.
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(showIntro, 400);  // brief pause so the page finishes rendering first
+  });
 
   // ─── Scan ──────────────────────────────────────────────────────────────────
 
@@ -559,9 +565,8 @@ HTML = r"""<!DOCTYPE html>
     });
   });
 
-  // ─── Initial placeholder (shown before first gesture) ──────────────────────
-  // Replaced entirely by showIntro() on first keydown/click.
-  output.textContent = '**** NETWORK SCANNER V1.0 ****\n64K RAM SYSTEM\n\nPRESS ANY KEY TO INITIALISE...';
+  // Brief placeholder shown for ~400ms before the intro animation begins
+  output.textContent = '**** NETWORK SCANNER V1.0 ****\n64K RAM SYSTEM\n\nINITIALISING...';
   ensureCursor();
 </script>
 </body>
