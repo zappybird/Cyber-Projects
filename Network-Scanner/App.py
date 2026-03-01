@@ -492,6 +492,9 @@ HTML = """<!DOCTYPE html>
       });
     });
   });
+<script src="{{ url_for('static', filename='terminal_sfx.js') }}"></script>
+<script>
+  window.TerminalSFX.init();
 </script>
 </body>
 </html>"""
