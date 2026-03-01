@@ -1,541 +1,592 @@
-"""
-app.py  –  Flask web GUI for Network Scanner
-Run:  python app.py
-Then open:  http://127.0.0.1:5000
-"""
+/**
+ * terminal_sfx.js  —  v2.2
+ * Ghost in the Shell / Matrix style terminal sound effects + animated intro
+ *
+ * ─── FLASK USAGE ──────────────────────────────────────────────────────────────
+ *
+ *  1. Place this file:        /static/terminal_sfx.js
+ *  2. Place sound files:      /static/sfx/click1–4.wav  enter.wav  backspace.wav
+ *
+ *  3. HTML template:
+ *
+ *       <textarea id="cmdInput"></textarea>
+ *       <pre     id="terminalOutput"></pre>
+ *
+ *       <script src="{{ url_for('static', filename='terminal_sfx.js') }}"></script>
+ *       <script>
+ *         // Basic init — intro fires automatically on first user gesture
+ *         window.TerminalSFX.init();
+ *
+ *         // Custom intro text (optional override):
+ *         window.TerminalSFX.init({
+ *           intro: {
+ *             enabled: true,
+ *             text: "NETWORK SCANNER v1.0\nTARGET : 192.168.1.254\nPORTS  : 1 TO 100\nREADY.\n\n",
+ *             charDelay: 38,
+ *           }
+ *         });
+ *
+ *         // Trigger typeOut manually at any point after init:
+ *         window.TerminalSFX.typeOut("SCANNING...\n", { charDelay: 30 });
+ *       </script>
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ROOT CAUSE FIX (v2.2):
+ *   Previous versions created the AudioContext at init() time, before any user
+ *   gesture. Chrome/Firefox immediately suspend it and will NOT resume unless
+ *   .resume() is called from within a user-gesture call stack.
+ *
+ *   Fix: AudioContext is NOT created until the first gesture handler fires.
+ *   WAV files are pre-fetched as ArrayBuffers at init() (no gesture needed for
+ *   fetch), then decoded into AudioBuffers only after the context exists.
+ *   This guarantees the context is both created and running when first used.
+ */
 
-from flask import Flask, render_template_string, request, Response
-import socket
-import nmap
-import json
-import queue
-import threading
-from datetime import datetime
+(function (global) {
+  'use strict';
 
-app = Flask(__name__)
+  // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Scanner logic (streaming version – yields lines into a queue)
-# ──────────────────────────────────────────────────────────────────────────────
+  var DEFAULT_CONFIG = {
 
-def port_scan(target, start_port, end_port):
-    open_ports = []
-    for port in range(start_port, end_port + 1):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(1)
-        if sock.connect_ex((target, port)) == 0:
-            open_ports.append(port)
-        sock.close()
-    return open_ports
+    selectors: {
+      input:  '#cmdInput',
+      output: '#terminalOutput',
+    },
 
+    sounds: {
+      clicks: [
+        '/static/sfx/click1.wav',
+        '/static/sfx/click2.wav',
+        '/static/sfx/click3.wav',
+        '/static/sfx/click4.wav',
+      ],
+      enter:     '/static/sfx/enter.wav',
+      backspace: '/static/sfx/backspace.wav',
+      // error: '/static/sfx/error.wav',  // uncomment if you have this file
+    },
 
-def banner_grab(target, port):
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(2)
-            s.connect((target, port))
-            return s.recv(1024).decode('utf-8', errors='ignore').strip()
-    except Exception:
-        return None
+    // Base volume per kind (0.0 – 1.0)
+    volume: {
+      click:     0.5,
+      enter:     0.6,
+      backspace: 0.45,
+      error:     0.65,
+    },
 
+    // Per-play randomness (keeps it organic)
+    jitter: {
+      volumeFraction:       0.18,  // ± 18% of base volume
+      playbackRateFraction: 0.04,  // ± 4% around 1.0 playback rate
+    },
 
-def vulnerability_scan(target):
-    nm = nmap.PortScanner()
-    try:
-        nm.scan(hosts=target, arguments="-O -sV --script=vuln")
-        return nm[target]
-    except Exception as e:
-        return {"error": str(e)}
+    // Throttling
+    cooldownMs:       18,
+    bulkThreshold:    20,   // chars — mutations above this = one sound
+    maxRatePerSecond: 30,
 
+    enableInput:  true,
+    enableOutput: true,
 
-def run_scan(target, start_port, end_port, q):
-    """Runs the full scan and pushes SSE-formatted strings into queue q."""
+    // 'observer'    — MutationObserver watches #terminalOutput
+    // 'typeOutOnly' — only typeOut() triggers output sounds
+    mode: 'observer',
 
-    def emit(msg, kind="log"):
-        q.put(json.dumps({"type": kind, "text": msg}))
+    // Ghost-in-the-Shell intro sequence
+    intro: {
+      enabled: true,
+      // Printed character-by-character on the first user gesture.
+      // Uses a live timestamp. Override in init({ intro: { text: '...' } }).
+      text: null,   // null = auto-generated at unlock time (see runIntro)
+      charDelay:       38,   // base ms per character
+      jitterMs:        16,   // ± random ms per character
+      newlinePauseMs: 160,   // extra pause after each \n
+    },
+  };
 
-    start_time = datetime.now()
-    emit(f"NETWORK SCANNER v1.0  —  {start_time.strftime('%Y-%m-%d %H:%M:%S')}", "header")
-    emit(f"TARGET  : {target}")
-    emit(f"PORTS   : {start_port} TO {end_port}")
-    emit("", "blank")
-    emit("READY.", "ready")
-    emit("", "blank")
+  // ─── STATE ───────────────────────────────────────────────────────────────────
 
-    # Port scan
-    emit("[*] INITIATING PORT SCAN...", "phase")
-    open_ports = port_scan(target, start_port, end_port)
-    if open_ports:
-        emit(f"    OPEN PORTS FOUND: {', '.join(str(p) for p in open_ports)}", "found")
-    else:
-        emit("    NO OPEN PORTS DETECTED.", "warn")
-    emit("", "blank")
+  var cfg            = {};
+  var audioCtx       = null;
+  var audioUnlocked  = false;
+  var rawBuffers     = {};      // url  → ArrayBuffer  (fetched early)
+  var decodedBuffers = {};      // key  → AudioBuffer  (decoded after unlock)
+  var buffersDecoded = false;
 
-    # Banner grab
-    emit("[*] GRABBING SERVICE BANNERS...", "phase")
-    banners = {}
-    for port in open_ports:
-        b = banner_grab(target, port)
-        banners[port] = b
-        if b:
-            emit(f"    PORT {port:>5}  →  {b[:60]}", "found")
-        else:
-            emit(f"    PORT {port:>5}  →  NO BANNER", "dim")
-    if not open_ports:
-        emit("    SKIPPED — NO OPEN PORTS.", "dim")
-    emit("", "blank")
+  var lastPlayTime   = 0;
+  var soundsThisSec  = 0;
+  var rateTimer      = null;
 
-    # Vuln scan
-    emit("[*] RUNNING VULNERABILITY SCAN — THIS MAY TAKE SEVERAL MINUTES...", "phase")
-    emit("    PLEASE STAND BY...", "dim")
-    vuln_info = vulnerability_scan(target)
-    emit("", "blank")
+  var observer       = null;
+  var observerPaused = false;
 
-    if vuln_info and "error" not in vuln_info:
-        # Host info
-        emit("─── HOST INFORMATION ──────────────────────────────", "section")
-        hostnames = vuln_info.get('hostnames', [])
-        if hostnames:
-            names = ", ".join(h['name'] for h in hostnames if h.get('name'))
-            emit(f"    HOSTNAME(S)  : {names}", "info")
+  var initialized    = false;
+  var introPlayed    = false;
+  var introQueued    = false;
 
-        os_matches = vuln_info.get('osmatch', [])
-        if os_matches:
-            emit("    OS DETECTION :", "info")
-            for i, m in enumerate(os_matches[:3], 1):
-                name = m.get('name', 'UNKNOWN')
-                acc  = m.get('accuracy', '?')
-                typ  = (m.get('osclass') or [{}])[0].get('type', '—')
-                emit(f"      {i}. {name}", "info")
-                emit(f"         ACCURACY: {acc}%   TYPE: {typ}", "dim")
-        emit("", "blank")
+  // ─── UTILITIES ───────────────────────────────────────────────────────────────
 
-        # Vulns
-        emit("─── VULNERABILITY RESULTS ─────────────────────────", "section")
-        vulns = vuln_info.get('vulns')
-        if vulns:
-            for vid, details in vulns.items():
-                state = details.get('state', 'UNKNOWN')
-                kind  = "vuln" if state == "VULNERABLE" else "warn"
-                emit(f"    [{state}]  {vid}", kind)
-                if details.get('description'):
-                    desc = details['description'].strip().replace('\n', ' ')
-                    emit(f"      └─ {desc[:100]}{'...' if len(desc) > 100 else ''}", "dim")
-        else:
-            emit("    NO KNOWN VULNERABILITIES DETECTED.", "ok")
-    else:
-        err = vuln_info.get("error", "Unknown error") if vuln_info else "Scan returned no data."
-        emit(f"    ERROR: {err}", "vuln")
-
-    end_time = datetime.now()
-    elapsed  = str(end_time - start_time).split('.')[0]
-    emit("", "blank")
-    emit("═" * 52, "div")
-    emit(f"SCAN COMPLETE  —  DURATION: {elapsed}", "header")
-    emit("═" * 52, "div")
-    emit("", "blank")
-    q.put(json.dumps({"type": "done"}))
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# HTML template  —  Commodore 64 / BASIC aesthetic
-# ──────────────────────────────────────────────────────────────────────────────
-
-HTML = """<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NETWORK SCANNER</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-
-  :root {
-    --bg:      #1a0a2e;
-    --screen:  #0d0d1a;
-    --text:    #7b68ee;
-    --bright:  #b39ddb;
-    --cyan:    #64ffda;
-    --green:   #69ff47;
-    --yellow:  #ffeb3b;
-    --red:     #ff5252;
-    --dim:     #4a3f6b;
-    --border:  #3d2b6b;
-    --glow:    0 0 8px #7b68ee88;
-    --glow2:   0 0 14px #b39ddb55;
+  function mergeConfig(defaults, overrides) {
+    var out = Object.assign({}, defaults);
+    if (!overrides) return out;
+    Object.keys(overrides).forEach(function (key) {
+      var ov = overrides[key];
+      var dv = defaults[key];
+      if (ov !== null && typeof ov === 'object' && !Array.isArray(ov) &&
+          dv !== null && typeof dv === 'object' && !Array.isArray(dv)) {
+        out[key] = Object.assign({}, dv, ov);
+      } else {
+        out[key] = ov;
+      }
+    });
+    return out;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  function rand(min, max) {
+    return min + Math.random() * (max - min);
+  }
 
-  body {
-    background: var(--bg);
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 12px;
-    /* subtle scanline overlay */
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.18) 2px,
-        rgba(0,0,0,0.18) 4px
+  function clamp(v, lo, hi) {
+    return Math.min(hi, Math.max(lo, v));
+  }
+
+  function padTwo(n) {
+    return n < 10 ? '0' + n : '' + n;
+  }
+
+  function nowTimestamp() {
+    var d = new Date();
+    return (
+      d.getFullYear() + '-' +
+      padTwo(d.getMonth() + 1) + '-' +
+      padTwo(d.getDate())       + ' ' +
+      padTwo(d.getHours())      + ':' +
+      padTwo(d.getMinutes())    + ':' +
+      padTwo(d.getSeconds())
+    );
+  }
+
+  // ─── RATE LIMITING ───────────────────────────────────────────────────────────
+
+  function canPlay() {
+    if (Date.now() - lastPlayTime < cfg.cooldownMs) return false;
+    if (soundsThisSec >= cfg.maxRatePerSecond) return false;
+    return true;
+  }
+
+  function recordPlay() {
+    lastPlayTime = Date.now();
+    soundsThisSec++;
+    if (!rateTimer) {
+      rateTimer = setTimeout(function () {
+        soundsThisSec = 0;
+        rateTimer = null;
+      }, 1000);
+    }
+  }
+
+  // ─── AUDIO CONTEXT ───────────────────────────────────────────────────────────
+  //
+  // KEY FIX: createAudioContext() is called ONLY from within a user gesture
+  // handler (unlock()). This is the only way to guarantee the context starts
+  // in 'running' state on Chrome and Firefox.
+
+  function createAudioContext() {
+    if (audioCtx) return audioCtx;
+    try {
+      var AC = global.AudioContext || global.webkitAudioContext;
+      if (!AC) {
+        console.warn('[TerminalSFX] Web Audio API not supported in this browser.');
+        return null;
+      }
+      audioCtx = new AC();
+      return audioCtx;
+    } catch (e) {
+      console.warn('[TerminalSFX] AudioContext creation failed:', e.message);
+      return null;
+    }
+  }
+
+  // ─── BUFFER LOADING — TWO PHASES ─────────────────────────────────────────────
+
+  // Phase 1 — fetch(): runs at init(), no gesture needed.
+  // Stores raw ArrayBuffer per URL so decoding can happen once context exists.
+  function fetchAllRaw() {
+    var urls = cfg.sounds.clicks.slice();
+    ['enter', 'backspace', 'error'].forEach(function (k) {
+      if (cfg.sounds[k]) urls.push(cfg.sounds[k]);
+    });
+
+    urls.forEach(function (url) {
+      fetch(url)
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.arrayBuffer();
+        })
+        .then(function (ab) {
+          rawBuffers[url] = ab;
+        })
+        .catch(function (err) {
+          console.warn('[TerminalSFX] Failed to fetch sound file:', url, '—', err.message);
+        });
+    });
+  }
+
+  // Phase 2 — decodeAudioData(): runs inside onUnlocked(), after context exists.
+  function decodeAllBuffers() {
+    if (buffersDecoded) return Promise.resolve();
+    var ctx = audioCtx;
+    if (!ctx) return Promise.resolve();
+
+    var promises = [];
+
+    cfg.sounds.clicks.forEach(function (url, i) {
+      var ab = rawBuffers[url];
+      if (!ab) return;
+      // .slice(0) because decodeAudioData detaches the original ArrayBuffer
+      promises.push(
+        ctx.decodeAudioData(ab.slice(0))
+          .then(function (buf) {
+            decodedBuffers['click' + i] = buf;
+          })
+          .catch(function (e) {
+            console.warn('[TerminalSFX] Decode failed:', url, e.message);
+          })
       );
+    });
+
+    ['enter', 'backspace', 'error'].forEach(function (kind) {
+      var url = cfg.sounds[kind];
+      if (!url) return;
+      var ab = rawBuffers[url];
+      if (!ab) return;
+      promises.push(
+        ctx.decodeAudioData(ab.slice(0))
+          .then(function (buf) {
+            decodedBuffers[kind] = buf;
+          })
+          .catch(function (e) {
+            console.warn('[TerminalSFX] Decode failed:', url, e.message);
+          })
+      );
+    });
+
+    return Promise.all(promises).then(function () {
+      buffersDecoded = true;
+    });
   }
 
-  /* ── Outer bezel ── */
-  .bezel {
-    width: 100%;
-    max-width: 860px;
-    background: linear-gradient(145deg, #2a1a4e, #1a0a2e);
-    border: 3px solid var(--border);
-    border-radius: 12px;
-    box-shadow:
-      0 0 0 2px #0d0822,
-      0 0 40px #7b68ee33,
-      inset 0 0 30px rgba(0,0,0,0.5);
-    padding: 28px 28px 24px;
+  // ─── PLAYBACK ────────────────────────────────────────────────────────────────
+
+  function playBuffer(buffer, kind) {
+    if (!audioCtx || !buffer) return;
+    // Guard: only play when context is confirmed running
+    if (!audioUnlocked || audioCtx.state !== 'running') return;
+
+    try {
+      var gain    = audioCtx.createGain();
+      var base    = cfg.volume[kind] !== undefined ? cfg.volume[kind] : cfg.volume.click;
+      var vf      = cfg.jitter.volumeFraction;
+      gain.gain.value = clamp(rand(base * (1 - vf), base * (1 + vf)), 0.01, 1.0);
+      gain.connect(audioCtx.destination);
+
+      var src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      var rf = cfg.jitter.playbackRateFraction;
+      src.playbackRate.value = clamp(rand(1.0 - rf, 1.0 + rf), 0.75, 1.25);
+      src.connect(gain);
+      src.start(0);
+    } catch (e) {
+      // Silently swallow — never throw into caller
+    }
   }
 
-  /* ── Title bar ── */
-  .title-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 12px;
-    margin-bottom: 20px;
-  }
-  .title-bar h1 {
-    font-size: 1rem;
-    letter-spacing: 0.25em;
-    color: var(--bright);
-    text-shadow: var(--glow);
-  }
-  .title-bar .badge {
-    font-size: 0.65rem;
-    color: var(--dim);
-    letter-spacing: 0.15em;
-  }
+  // Public playClick — silently no-ops if audio is unavailable
+  function playClick(kind) {
+    if (!canPlay()) return;
 
-  /* ── Input panel ── */
-  .input-panel {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .field-group label {
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    color: var(--dim);
-  }
-  .field-group input {
-    background: var(--screen);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--cyan);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    padding: 7px 10px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    width: 100%;
-  }
-  .field-group input:focus {
-    border-color: var(--text);
-    box-shadow: var(--glow);
-  }
-  .field-group input::placeholder { color: var(--dim); }
+    var buffer      = null;
+    var resolvedKind = kind || 'click';
 
-  button#scan-btn {
-    align-self: flex-end;
-    background: transparent;
-    border: 2px solid var(--text);
-    border-radius: 4px;
-    color: var(--bright);
-    cursor: pointer;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.2em;
-    padding: 7px 20px;
-    transition: background 0.15s, box-shadow 0.15s, color 0.15s;
-    white-space: nowrap;
-  }
-  button#scan-btn:hover {
-    background: var(--text);
-    color: var(--screen);
-    box-shadow: var(--glow);
-  }
-  button#scan-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background: transparent;
-    color: var(--dim);
-    border-color: var(--dim);
-  }
-
-  /* ── Screen area ── */
-  .screen {
-    background: var(--screen);
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.6), var(--glow2);
-    padding: 16px 18px;
-    height: 480px;
-    overflow-y: auto;
-    font-size: 0.82rem;
-    line-height: 1.65;
-    position: relative;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) var(--screen);
-  }
-  .screen::-webkit-scrollbar { width: 6px; }
-  .screen::-webkit-scrollbar-track { background: var(--screen); }
-  .screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  /* line types */
-  .line           { color: var(--text); }
-  .line.header    { color: var(--bright); font-size: 0.9rem; letter-spacing: 0.1em; }
-  .line.phase     { color: var(--cyan); }
-  .line.section   { color: var(--bright); }
-  .line.found     { color: var(--green); }
-  .line.ok        { color: var(--green); }
-  .line.warn      { color: var(--yellow); }
-  .line.vuln      { color: var(--red); }
-  .line.dim       { color: var(--dim); }
-  .line.info      { color: var(--text); }
-  .line.ready     { color: var(--green); animation: blink 1s step-end 3; }
-  .line.div       { color: var(--border); }
-  .line.blank     { height: 0.4em; }
-
-  /* blinking cursor */
-  .cursor {
-    display: inline-block;
-    width: 0.6em;
-    height: 1em;
-    background: var(--text);
-    animation: blink 0.9s step-end infinite;
-    vertical-align: text-bottom;
-    margin-left: 2px;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
-  }
-
-  /* status bar */
-  .status-bar {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-    font-size: 0.62rem;
-    letter-spacing: 0.15em;
-    color: var(--dim);
-    padding: 0 2px;
-  }
-  #status-text { color: var(--text); }
-</style>
-</head>
-<body>
-
-<div class="bezel">
-  <div class="title-bar">
-    <h1>■ NETWORK SCANNER</h1>
-    <span class="badge">BASIC v2.0  64K RAM SYSTEM</span>
-  </div>
-
-  <div class="input-panel">
-    <div class="field-group">
-      <label>TARGET IP</label>
-      <input type="text" id="target" placeholder="192.168.1.1" value="">
-    </div>
-    <div class="field-group">
-      <label>START PORT</label>
-      <input type="number" id="start-port" placeholder="1" value="1" min="1" max="65535">
-    </div>
-    <div class="field-group">
-      <label>END PORT</label>
-      <input type="number" id="end-port" placeholder="100" value="100" min="1" max="65535">
-    </div>
-    <button id="scan-btn" onclick="startScan()">RUN</button>
-  </div>
-
-  <div class="screen" id="screen">
-    <div class="line header">**** NETWORK SCANNER V1.0 ****</div>
-    <div class="line dim">64K RAM SYSTEM  38911 BASIC BYTES FREE</div>
-    <div class="line blank"></div>
-    <div class="line">READY.</div>
-    <div class="line blank"></div>
-    <div class="line dim">ENTER TARGET IP AND PORT RANGE, THEN PRESS [RUN].</div>
-    <div class="line blank"></div>
-    <span class="cursor"></span>
-  </div>
-
-  <div class="status-bar">
-    <span id="status-text">IDLE</span>
-    <span id="elapsed-text"></span>
-  </div>
-</div>
-
-<script>
-  let eventSource = null;
-  let startTs     = null;
-  let timerHandle = null;
-
-  function getScreen() { return document.getElementById('screen'); }
-
-  function clearScreen() {
-    getScreen().innerHTML = '';
-  }
-
-  function appendLine(text, cls) {
-    const screen = getScreen();
-
-    // Remove old cursor if present
-    const oldCursor = screen.querySelector('.cursor');
-    if (oldCursor) oldCursor.remove();
-
-    if (cls === 'blank') {
-      const d = document.createElement('div');
-      d.className = 'line blank';
-      screen.appendChild(d);
+    if (resolvedKind === 'click') {
+      var keys = Object.keys(decodedBuffers).filter(function (k) {
+        return k.indexOf('click') === 0;
+      });
+      if (!keys.length) return;
+      buffer = decodedBuffers[keys[Math.floor(Math.random() * keys.length)]];
     } else {
-      const d = document.createElement('div');
-      d.className = 'line ' + (cls || '');
-      d.textContent = text;
-      screen.appendChild(d);
+      buffer = decodedBuffers[resolvedKind] || null;
+      if (!buffer) {
+        // Graceful fallback to any available click
+        var fb = Object.keys(decodedBuffers).filter(function (k) {
+          return k.indexOf('click') === 0;
+        });
+        if (fb.length) buffer = decodedBuffers[fb[0]];
+      }
     }
 
-    // Append cursor at end
-    const cur = document.createElement('span');
-    cur.className = 'cursor';
-    screen.appendChild(cur);
-
-    screen.scrollTop = screen.scrollHeight;
+    if (!buffer) return;
+    recordPlay();
+    playBuffer(buffer, resolvedKind);
   }
 
-  function setStatus(msg) {
-    document.getElementById('status-text').textContent = msg;
-  }
+  // ─── UNLOCK ──────────────────────────────────────────────────────────────────
 
-  function startTimer() {
-    startTs = Date.now();
-    timerHandle = setInterval(() => {
-      const s = Math.floor((Date.now() - startTs) / 1000);
-      const m = Math.floor(s / 60);
-      const ss = String(s % 60).padStart(2, '0');
-      document.getElementById('elapsed-text').textContent = `${m}:${ss} ELAPSED`;
-    }, 1000);
-  }
+  function unlock() {
+    if (audioUnlocked) return;
 
-  function stopTimer() {
-    clearInterval(timerHandle);
-  }
+    // Create AND start the AudioContext here, inside the gesture stack
+    var ctx = createAudioContext();
+    if (!ctx) return;
 
-  function startScan() {
-    const target    = document.getElementById('target').value.trim();
-    const startPort = document.getElementById('start-port').value.trim();
-    const endPort   = document.getElementById('end-port').value.trim();
-
-    if (!target || !startPort || !endPort) {
-      appendLine('?SYNTAX ERROR — ALL FIELDS REQUIRED.', 'vuln');
+    if (ctx.state === 'running') {
+      audioUnlocked = true;
+      onUnlocked();
       return;
     }
 
-    if (eventSource) { eventSource.close(); }
-
-    clearScreen();
-    document.getElementById('scan-btn').disabled = true;
-    setStatus('SCANNING...');
-    startTimer();
-
-    const url = `/scan?target=${encodeURIComponent(target)}&start=${encodeURIComponent(startPort)}&end=${encodeURIComponent(endPort)}`;
-    eventSource = new EventSource(url);
-
-    eventSource.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      if (data.type === 'done') {
-        eventSource.close();
-        document.getElementById('scan-btn').disabled = false;
-        setStatus('SCAN COMPLETE');
-        stopTimer();
-        return;
+    // Suspended — resume now while we're still in the gesture handler
+    ctx.resume().then(function () {
+      if (ctx.state === 'running') {
+        audioUnlocked = true;
+        onUnlocked();
       }
-      appendLine(data.text, data.type);
-    };
-
-    eventSource.onerror = () => {
-      appendLine('?CONNECTION ERROR — SCAN ABORTED.', 'vuln');
-      eventSource.close();
-      document.getElementById('scan-btn').disabled = false;
-      setStatus('ERROR');
-      stopTimer();
-    };
+    }).catch(function (e) {
+      console.warn('[TerminalSFX] resume() failed:', e.message);
+    });
   }
 
-  // Allow Enter key in inputs to trigger scan
-  document.addEventListener('DOMContentLoaded', () => {
-    ['target','start-port','end-port'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => {
-        if (e.key === 'Enter') startScan();
+  function onUnlocked() {
+    decodeAllBuffers().then(function () {
+      if (cfg.intro.enabled && !introPlayed && !introQueued) {
+        introQueued = true;
+        // Brief delay so the triggering keydown sound plays first
+        setTimeout(runIntro, 80);
+      }
+    });
+  }
+
+  // ─── UNLOCK LISTENERS ────────────────────────────────────────────────────────
+
+  function attachUnlockListeners() {
+    function onGesture() {
+      unlock();
+      // { once: true } on addEventListener handles removal automatically,
+      // but belt-and-suspenders removal for the others:
+      window.removeEventListener('keydown',  onGesture);
+      window.removeEventListener('click',    onGesture);
+      window.removeEventListener('touchend', onGesture);
+    }
+    // Attach on WINDOW (not document) for broadest gesture capture
+    window.addEventListener('keydown',  onGesture, { once: true, passive: true });
+    window.addEventListener('click',    onGesture, { once: true, passive: true });
+    window.addEventListener('touchend', onGesture, { once: true, passive: true });
+  }
+
+  // ─── INPUT HOOKS ─────────────────────────────────────────────────────────────
+
+  function attachInputHooks() {
+    if (!cfg.enableInput) return;
+    var el = document.querySelector(cfg.selectors.input);
+    if (!el) {
+      console.warn('[TerminalSFX] Input element not found:', cfg.selectors.input);
+      return;
+    }
+
+    el.addEventListener('keydown', function (e) {
+      // keydown on the input IS a user gesture — call unlock() here too so
+      // typing into the field unlocks audio even if they never clicked elsewhere
+      unlock();
+
+      if (e.key === 'Enter')                      { playClick('enter');     return; }
+      if (e.key === 'Backspace' || e.key === 'Delete') { playClick('backspace'); return; }
+      if (e.key.length === 1)                     { playClick('click');     }
+    }, { passive: true });
+  }
+
+  // ─── MUTATION OBSERVER ───────────────────────────────────────────────────────
+
+  function handleChunk(text) {
+    if (!text || !text.length) return;
+    if (text.length > cfg.bulkThreshold) {
+      playClick('click');  // one sound for the whole bulk chunk
+    } else {
+      for (var i = 0; i < text.length; i++) {
+        playClick('click');
+      }
+    }
+  }
+
+  function startObserver() {
+    if (!cfg.enableOutput || cfg.mode !== 'observer') return;
+    var el = document.querySelector(cfg.selectors.output);
+    if (!el) {
+      console.warn('[TerminalSFX] Output element not found:', cfg.selectors.output);
+      return;
+    }
+    if (observer) { observer.disconnect(); observer = null; }
+
+    observer = new MutationObserver(function (mutations) {
+      if (observerPaused) return;  // typeOut() is running — skip to avoid double sounds
+      mutations.forEach(function (m) {
+        m.addedNodes.forEach(function (node) {
+          handleChunk(node.textContent || '');
+        });
+        if (m.type === 'characterData') {
+          playClick('click');
+        }
       });
     });
-  });
-</script>
-</body>
-</html>"""
 
+    observer.observe(el, { childList: true, subtree: true, characterData: true });
+  }
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Routes
-# ──────────────────────────────────────────────────────────────────────────────
+  function pauseObserver()  { observerPaused = true;  }
+  function resumeObserver() { observerPaused = false; }
 
-@app.route('/')
-def index():
-    return render_template_string(HTML)
+  // ─── TYPEOUT ─────────────────────────────────────────────────────────────────
 
+  /**
+   * Append text to the output element, character by character, with sounds.
+   *
+   * @param {string} text
+   * @param {object} [opts]
+   * @param {number}   [opts.charDelay=30]        base ms between characters
+   * @param {number}   [opts.jitterMs=10]         ± random ms per character
+   * @param {number}   [opts.newlinePauseMs=0]    extra pause after each newline
+   * @param {string}   [opts.selector]            override output selector
+   * @param {function} [opts.onComplete]          called when animation finishes
+   */
+  function typeOut(text, opts) {
+    if (!text) return;
+    var o           = opts || {};
+    var charDelay   = o.charDelay        !== undefined ? o.charDelay        : 30;
+    var jitterMs    = o.jitterMs         !== undefined ? o.jitterMs         : 10;
+    var nlPause     = o.newlinePauseMs   !== undefined ? o.newlinePauseMs   : 0;
+    var onComplete  = typeof o.onComplete === 'function' ? o.onComplete : null;
+    var el          = document.querySelector(o.selector || cfg.selectors.output);
+    if (!el) return;
 
-@app.route('/scan')
-def scan():
-    target     = request.args.get('target', '').strip()
-    start_port = int(request.args.get('start', 1))
-    end_port   = int(request.args.get('end', 100))
+    // Pause observer for the duration so sounds don't double-fire
+    pauseObserver();
 
-    q = queue.Queue()
+    var i = 0;
 
-    def background():
-        try:
-            run_scan(target, start_port, end_port, q)
-        except Exception as ex:
-            q.put(json.dumps({"type": "vuln", "text": f"FATAL ERROR: {ex}"}))
-            q.put(json.dumps({"type": "done"}))
+    function next() {
+      if (i >= text.length) {
+        resumeObserver();
+        if (onComplete) onComplete();
+        return;
+      }
 
-    threading.Thread(target=background, daemon=True).start()
+      var ch = text[i++];
+      el.textContent += ch;
+      el.scrollTop = el.scrollHeight;
 
-    def stream():
-        while True:
-            item = q.get()
-            yield f"data: {item}\n\n"
-            if json.loads(item).get("type") == "done":
-                break
+      // Sound per character
+      if      (ch === '\n')  { playClick('click'); }
+      else if (ch === ' ')   { if (i % 2 === 0) playClick('click'); }
+      else                   { playClick('click'); }
 
-    return Response(stream(), mimetype='text/event-stream',
-                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
+      // Random timing for organic feel
+      var delay = charDelay + rand(-jitterMs, jitterMs);
+      if (ch === '\n' && nlPause > 0) delay += nlPause;
+      setTimeout(next, Math.max(0, delay));
+    }
 
+    next();
+  }
 
-# ──────────────────────────────────────────────────────────────────────────────
-if __name__ == '__main__':
-    print("\n  ■ NETWORK SCANNER GUI")
-    print("  Open your browser → http://127.0.0.1:5000\n")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+  // ─── INTRO ───────────────────────────────────────────────────────────────────
+
+  function runIntro() {
+    if (introPlayed) return;
+    introPlayed = true;
+
+    var el = document.querySelector(cfg.selectors.output);
+    if (!el) return;
+
+    // Build default intro text with a live timestamp if none was provided
+    var text = cfg.intro.text;
+    if (!text) {
+      text = (
+        'NETWORK SCANNER v1.0 \u2014 ' + nowTimestamp() + '\n' +
+        'TARGET : 192.168.1.254\n'                               +
+        'PORTS  : 1 TO 100\n'                                    +
+        'READY.\n\n'
+      );
+    }
+
+    // Clear the output so the intro is the first thing printed.
+    // Remove this line if you want to preserve existing content.
+    el.textContent = '';
+
+    typeOut(text, {
+      charDelay:      cfg.intro.charDelay,
+      jitterMs:       cfg.intro.jitterMs,
+      newlinePauseMs: cfg.intro.newlinePauseMs,
+      onComplete: function () {
+        var input = document.querySelector(cfg.selectors.input);
+        if (input) input.focus();
+      },
+    });
+  }
+
+  // ─── INIT ────────────────────────────────────────────────────────────────────
+
+  function init(configOverride) {
+    if (initialized) return;
+    initialized = true;
+
+    cfg = mergeConfig(DEFAULT_CONFIG, configOverride);
+
+    // Phase 1: pre-fetch WAV files (no gesture needed)
+    fetchAllRaw();
+
+    // Gesture listeners on window — unlock + intro on first interaction
+    attachUnlockListeners();
+
+    // Attach DOM hooks after DOM is ready
+    function domReady() {
+      attachInputHooks();
+      startObserver();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', domReady);
+    } else {
+      domReady();
+    }
+  }
+
+  // ─── PUBLIC API ──────────────────────────────────────────────────────────────
+
+  global.TerminalSFX = {
+    /**
+     * Initialize. Call once after including the script.
+     * @param {object} [configOverride]
+     */
+    init: init,
+
+    /**
+     * Unlock audio. Called automatically on first keydown/click/touchend.
+     * Can be called manually from a button's onclick handler.
+     */
+    unlock: unlock,
+
+    /**
+     * Animate text into the output element with typewriter effect + sounds.
+     * @param {string} text
+     * @param {{ charDelay?, jitterMs?, newlinePauseMs?, selector?, onComplete? }} [opts]
+     */
+    typeOut: typeOut,
+
+    /**
+     * Play a sound immediately (silently no-ops if audio not ready).
+     * @param {'click'|'enter'|'backspace'|'error'} [kind]
+     */
+    playClick: playClick,
+  };
+
+})(window);
