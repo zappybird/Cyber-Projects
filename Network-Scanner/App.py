@@ -139,190 +139,240 @@ HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NETWORK SCANNER</title>
+<title>network_scan.py</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
+  /*
+   * Linux TTY / phosphor green aesthetic.
+   * Three shades of green only — bright, mid, dim.
+   * Pure black background. No borders, no bezel, no radius.
+   * Feels like ssh'd into a machine at 3am.
+   */
   :root {
-    --bg:      #1a0a2e;
-    --screen:  #0d0d1a;
-    --text:    #7b68ee;
-    --bright:  #b39ddb;
-    --cyan:    #64ffda;
-    --green:   #69ff47;
-    --yellow:  #ffeb3b;
-    --red:     #ff5252;
-    --dim:     #4a3f6b;
-    --border:  #3d2b6b;
-    --glow:    0 0 8px #7b68ee88;
-    --glow2:   0 0 14px #b39ddb55;
+    --bg:       #000000;
+    --bright:   #00ff41;   /* phosphor bright  — headers, found, ready   */
+    --mid:      #00c832;   /* phosphor mid     — body text, info, phase   */
+    --dim:      #005c1a;   /* phosphor dim     — secondary, dividers      */
+    --warn:     #00e028;   /* slightly off     — warnings (still green)   */
+    --glow:     0 0 6px #00ff4166;
+    --glow-dim: 0 0 3px #00ff4122;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: var(--bg);
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: var(--mid);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 24px 12px;
+    padding: 0;
+    /* subtle phosphor scanlines */
     background-image: repeating-linear-gradient(
-      0deg, transparent, transparent 2px,
-      rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 255, 65, 0.03) 3px,
+      rgba(0, 255, 65, 0.03) 4px
     );
   }
 
+  /* Full-width TTY layout — no bezel, no card, no centering box */
   .bezel {
     width: 100%;
-    max-width: 860px;
-    background: linear-gradient(145deg, #2a1a4e, #1a0a2e);
-    border: 3px solid var(--border);
-    border-radius: 12px;
-    box-shadow: 0 0 0 2px #0d0822, 0 0 40px #7b68ee33, inset 0 0 30px rgba(0,0,0,0.5);
-    padding: 28px 28px 24px;
+    max-width: 100%;
+    padding: 16px 24px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 
+  /* Title bar becomes a plain top status line like a tmux bar */
   .title-bar {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 12px;
-    margin-bottom: 20px;
+    border-bottom: 1px solid var(--dim);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
   }
-  .title-bar h1 { font-size: 1rem; letter-spacing: 0.25em; color: var(--bright); text-shadow: var(--glow); }
-  .title-bar .badge { font-size: 0.65rem; color: var(--dim); letter-spacing: 0.15em; }
-
-  .input-panel {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .field-group { display: flex; flex-direction: column; gap: 4px; }
-  .field-group label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--dim); }
-  .field-group input {
-    background: var(--screen);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--cyan);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    padding: 7px 10px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    width: 100%;
-  }
-  .field-group input:focus { border-color: var(--text); box-shadow: var(--glow); }
-  .field-group input::placeholder { color: var(--dim); }
-
-  button#scan-btn {
-    align-self: flex-end;
-    background: transparent;
-    border: 2px solid var(--text);
-    border-radius: 4px;
-    color: var(--bright);
-    cursor: pointer;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
+  .title-bar h1 {
+    font-size: 1.1rem;
     letter-spacing: 0.2em;
-    padding: 7px 20px;
-    transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+    color: var(--bright);
+    text-shadow: var(--glow);
+    font-weight: normal;
+  }
+  .title-bar .badge {
+    font-size: 0.85rem;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* Input row — inline, minimal, like typing args on a shell prompt */
+  .input-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--dim);
+    padding-bottom: 10px;
+  }
+  .field-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-group label {
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: var(--dim);
     white-space: nowrap;
   }
-  button#scan-btn:hover { background: var(--text); color: var(--screen); box-shadow: var(--glow); }
-  button#scan-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; color: var(--dim); border-color: var(--dim); }
+  .field-group input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--mid);
+    color: var(--bright);
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    padding: 2px 6px;
+    outline: none;
+    width: 130px;
+    transition: border-color 0.15s, text-shadow 0.15s;
+    caret-color: var(--bright);
+  }
+  .field-group input:focus {
+    border-bottom-color: var(--bright);
+    text-shadow: var(--glow);
+  }
+  .field-group input::placeholder { color: var(--dim); }
+  /* Remove number spinners */
+  .field-group input[type=number]::-webkit-inner-spin-button,
+  .field-group input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .field-group input[type=number] { -moz-appearance: textfield; }
+
+  button#scan-btn {
+    background: transparent;
+    border: 1px solid var(--mid);
+    color: var(--bright);
+    cursor: pointer;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    padding: 3px 18px;
+    transition: background 0.1s, text-shadow 0.1s, border-color 0.1s;
+    white-space: nowrap;
+    border-radius: 0;
+  }
+  button#scan-btn:hover {
+    background: var(--bright);
+    color: var(--bg);
+    border-color: var(--bright);
+    text-shadow: none;
+  }
+  button#scan-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: transparent;
+    color: var(--dim);
+    border-color: var(--dim);
+  }
 
   /*
-   * #terminalOutput — the SINGLE output container.
-   *
-   * Using <pre> with white-space:pre-wrap means plain text (from typeOut's
-   * intro) and <span> children (from appendLine's SSE output) both render
-   * correctly without layout conflicts.
+   * #terminalOutput — full-width, no border, pure terminal.
+   * Height fills remaining viewport. Scrollbar styled to match.
    */
   #terminalOutput {
-    background: var(--screen);
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.6), var(--glow2);
-    padding: 16px 18px;
-    height: 480px;
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    height: calc(100vh - 180px);
+    min-height: 320px;
     overflow-y: auto;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.82rem;
-    line-height: 1.65;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-word;
+    color: var(--mid);
+    text-shadow: var(--glow-dim);
     scrollbar-width: thin;
-    scrollbar-color: var(--border) var(--screen);
+    scrollbar-color: var(--dim) transparent;
   }
-  #terminalOutput::-webkit-scrollbar { width: 6px; }
-  #terminalOutput::-webkit-scrollbar-track { background: var(--screen); }
-  #terminalOutput::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  #terminalOutput::-webkit-scrollbar { width: 4px; }
+  #terminalOutput::-webkit-scrollbar-track { background: transparent; }
+  #terminalOutput::-webkit-scrollbar-thumb { background: var(--dim); }
 
-  /* Colored line spans written by appendLine() */
-  .line         { display: block; }
-  .line.header  { color: var(--bright); letter-spacing: 0.08em; }
-  .line.phase   { color: var(--cyan); }
-  .line.section { color: var(--bright); }
-  .line.found   { color: var(--green); }
-  .line.ok      { color: var(--green); }
-  .line.warn    { color: var(--yellow); }
-  .line.vuln    { color: var(--red); }
-  .line.dim     { color: var(--dim); }
-  .line.info    { color: var(--text); }
-  .line.ready   { color: var(--green); }
-  .line.div     { color: var(--border); }
-  .line.blank   { display: block; height: 0.5em; }
+  /* All line types use green shades only */
+  .line           { display: block; color: var(--mid); }
+  .line.header    { color: var(--bright); text-shadow: var(--glow); letter-spacing: 0.06em; }
+  .line.phase     { color: var(--bright); }
+  .line.section   { color: var(--bright); }
+  .line.found     { color: var(--bright); text-shadow: var(--glow); }
+  .line.ok        { color: var(--bright); text-shadow: var(--glow); }
+  .line.warn      { color: var(--warn); }
+  .line.vuln      { color: var(--bright); text-shadow: var(--glow); }   /* bright = danger stands out */
+  .line.dim       { color: var(--dim); }
+  .line.info      { color: var(--mid); }
+  .line.ready     { color: var(--bright); text-shadow: var(--glow); }
+  .line.div       { color: var(--dim); }
+  .line.blank     { display: block; height: 0.4em; }
 
-  /* Blinking cursor — always kept as the last child of #terminalOutput */
+  /* Block cursor — classic Linux terminal underscore/block style */
   .cursor {
     display: inline-block;
-    width: 0.55em; height: 0.9em;
-    background: var(--text);
-    animation: blink 0.9s step-end infinite;
+    width: 0.6em;
+    height: 1.05em;
+    background: var(--bright);
+    box-shadow: var(--glow);
+    animation: blink 1.0s step-end infinite;
     vertical-align: text-bottom;
-    margin-left: 2px;
+    margin-left: 1px;
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
+  /* Status bar — like a shell prompt line at the bottom */
   .status-bar {
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
-    font-size: 0.62rem;
-    letter-spacing: 0.15em;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
     color: var(--dim);
-    padding: 0 2px;
   }
-  #status-text { color: var(--text); }
+  #status-text { color: var(--mid); }
 </style>
 </head>
 <body>
 
 <div class="bezel">
   <div class="title-bar">
-    <h1>&#9632; NETWORK SCANNER</h1>
-    <span class="badge">BASIC v2.2  64K RAM SYSTEM</span>
+    <h1>root@scanner:~#&nbsp;./network_scan.py</h1>
+    <span class="badge">tty1 | pts/0 | v2.2</span>
   </div>
 
   <div class="input-panel">
     <div class="field-group">
-      <label>TARGET IP</label>
+      <label>--target</label>
       <input type="text"   id="target"     placeholder="192.168.1.1">
     </div>
     <div class="field-group">
-      <label>START PORT</label>
+      <label>--port-start</label>
       <input type="number" id="start-port" placeholder="1"   value="1"   min="1" max="65535">
     </div>
     <div class="field-group">
-      <label>END PORT</label>
+      <label>--port-end</label>
       <input type="number" id="end-port"   placeholder="100" value="100" min="1" max="65535">
     </div>
-    <button id="scan-btn" onclick="startScan()">RUN</button>
+    <button id="scan-btn" onclick="startScan()">[ SCAN ]</button>
   </div>
 
   <!--
@@ -434,12 +484,14 @@ HTML = r"""<!DOCTYPE html>
                  pad(now.getSeconds());
 
     const text = (
-      '**** NETWORK SCANNER V1.0 ****\n'           +
-      '64K RAM SYSTEM  38911 BASIC BYTES FREE\n\n' +
-      'DATE   : ' + ts + '\n'                      +
-      'STATUS : SYSTEM READY\n\n'                  +
-      'ENTER TARGET IP AND PORT RANGE,\n'          +
-      'THEN PRESS [RUN] TO BEGIN SCAN.\n\n'
+      'Linux 6.8.0-generic #36-Ubuntu SMP\n'  +
+      'network_scan.py  --  port scanner / vuln audit\n\n' +
+      '[  0.000] Initialising network interfaces...\n'  +
+      '[  0.012] Loading nmap engine...\n'              +
+      '[  0.031] Binding raw socket...\n'               +
+      '[  0.044] System ready.\n\n'                    +
+      'Usage: enter target IP and port range,\n'       +
+      'then press [ SCAN ] to begin.\n\n'
     );
 
     // Wipe placeholder text, then animate the intro
@@ -451,7 +503,7 @@ HTML = r"""<!DOCTYPE html>
       newlinePauseMs: 280,
       onComplete: function () {
         ensureCursor();
-        setStatus('READY');
+        setStatus('ready.');
         document.getElementById('target').focus();
       }
     });
@@ -526,7 +578,7 @@ HTML = r"""<!DOCTYPE html>
     ensureCursor();
 
     document.getElementById('scan-btn').disabled = true;
-    setStatus('SCANNING...');
+    setStatus('scanning...');
     startTimer();
 
     const url = '/scan?target=' + encodeURIComponent(target)
@@ -540,7 +592,7 @@ HTML = r"""<!DOCTYPE html>
       if (data.type === 'done') {
         eventSource.close();
         document.getElementById('scan-btn').disabled = false;
-        setStatus('SCAN COMPLETE');
+        setStatus('done.');
         stopTimer();
         return;
       }
@@ -551,7 +603,7 @@ HTML = r"""<!DOCTYPE html>
       appendLine('?CONNECTION ERROR \u2014 SCAN ABORTED.', 'vuln');
       eventSource.close();
       document.getElementById('scan-btn').disabled = false;
-      setStatus('ERROR');
+      setStatus('error');
       stopTimer();
     };
   }
@@ -566,7 +618,7 @@ HTML = r"""<!DOCTYPE html>
   });
 
   // Brief placeholder shown for ~400ms before the intro animation begins
-  output.textContent = '**** NETWORK SCANNER V1.0 ****\n64K RAM SYSTEM\n\nINITIALISING...';
+  output.textContent = 'root@scanner:~# ./network_scan.py\n\nINITIALISING...';
   ensureCursor();
 </script>
 </body>
