@@ -1,10 +1,9 @@
 import hashlib
 
 # hashing.py 
-def hash_md5(data_string) -> str:
-     # TODO: implement MD5 hashing pass 
+def hash_md5(data_string: str) -> str:
 
-     # Encode string to bytes
+    # Encode string to bytes
     encoded_data = data_string.encode('utf-8')
 
     # Create MD5 hash object
@@ -15,25 +14,24 @@ def hash_md5(data_string) -> str:
 
 
 
-def hash_sha1(text: str) -> str: 
-    # TODO: implement SHA1 hashing pass 
-    #create SHA1 hash object
-    hash_object = hashlib.sha1(text.encode('utf-8'))
+def hash_sha1(data_string: str) -> str: 
 
-    #update hash object with the bytes of the input string
-    hash_object.update(text.encode('utf-8'))
+    #encode string to bytes
+    encoded_data = data_string.encode('utf-8')
+
+    #create SHA1 hash object
+    hash_object = hashlib.sha1(encoded_data)
 
     #return the hexadecimal representation of the hash
     return hash_object.hexdigest()
 
-def hash_sha256(text: str) -> str: 
-    # TODO: implement SHA256 hashing pass 
+def hash_sha256(data_string: str) -> str: 
+
+    #encode string to bytes
+    encoded_data = data_string.encode('utf-8')
 
     #create SHA256 hash object
-    hash_object = hashlib.sha256(text.encode('utf-8'))
-
-    #update hash object with the bytes of the input string
-    hash_object.update(text.encode('utf-8'))
+    hash_object = hashlib.sha256()
 
     #return the hexadecimal representation of the hash
     return hash_object.hexdigest()
@@ -53,6 +51,8 @@ def verify_hash(guess: str, target_hash: str, algorithm: str, salt: str = "") ->
         guess_hash = hash_sha256(salted_guess)
     else:
         raise ValueError("Unsupported hashing algorithm")
+    return guess_hash == target_hash
+
 
 
 input_str = "yo momma" 
