@@ -1,4 +1,6 @@
+
 import hashlib
+
 
 # hashing.py 
 def hash_md5(data_string: str) -> str:
@@ -52,7 +54,6 @@ def verify_hash(guess: str, target_hash: str, algorithm: str, salt: str = "") ->
     return guess_hash == target_hash
 
 
-input_str = "yo momma"
 algorithm = ["md5", "sha1", "sha256"]
 
 hash_functions = {
@@ -62,8 +63,4 @@ hash_functions = {
 }
 
 for algo in algorithm:
-    hashed_str = hash_functions[algo](input_str)
-    print(f"{algo.upper()} hash of '{input_str}' is: {hashed_str}")
-
-    verified = verify_hash(input_str, hashed_str, algo)
-    print(f"Verification result for {algo.upper()}: {verified}")
+    
