@@ -1,4 +1,7 @@
 # attacks/bruteforce.py
+import itertools
+import hashlib
+from hashing import hash_functions
 
 def bruteforce_attack(target_hash: str, algorithm: str, charset: str, max_length: int, salt: str = ""):
     # TODO: generate combinations using itertools.product
@@ -8,6 +11,6 @@ def bruteforce_attack(target_hash: str, algorithm: str, charset: str, max_length
             guess = "".join(combination)
             if salt:
                 guess = salt + guess
-            if hash_function(guess, algorithm) == target_hash:
+            if hash_functions[algorithm](guess) == target_hash:
                 return guess
     return None

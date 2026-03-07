@@ -1,5 +1,4 @@
-from attacks.dictionary import dictionary_attack
-from attacks.bruteforce import bruteforce_attack
+
 
 def parse_arguments():
     # TODO: use argparse to get:
