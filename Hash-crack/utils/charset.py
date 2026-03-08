@@ -1,7 +1,6 @@
-# utils/charset.py
+
 
 def get_charset(option: str) -> str:
-    # TODO: return charset based on user selection
     # e.g., "lower", "upper", "digits", "all"
     charsets = {
         "lower": "abcdefghijklmnopqrstuvwxyz",
