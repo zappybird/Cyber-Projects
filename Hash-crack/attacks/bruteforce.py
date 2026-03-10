@@ -1,5 +1,4 @@
 import itertools
-import hashlib
 from hashing import hash_functions
 
 def bruteforce_attack(target_hash: str, algorithm: str, charset: str, max_length: int, salt: str = ""):

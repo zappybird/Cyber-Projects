@@ -1,5 +1,3 @@
-import hashlib
-import os
 from hashing import hash_functions
 
 def dictionary_attack(target_hash: str, algorithm: str, wordlist_path: str, salt: str = ""):
