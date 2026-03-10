@@ -97,7 +97,7 @@ At the bottom of the script, a small loop:
 <h2>Installation (from source)</h2>
 
 <h3>1. Clone the repository</h3>
-<pre><code>git clone https://github.com/yourusername/HashingDemo.git
+<pre><code>git clone https://github.com/SybilNode/Cyber-Projects/tree/main/Hash-crack
 cd HashingDemo
 </code></pre>
 
