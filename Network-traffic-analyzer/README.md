@@ -141,13 +141,6 @@ netanal chart traffic.pcap --type all -d ./charts/
 
 <h2>Next Steps</h2>
 
-<ol>
-  <li><strong>Understand the concepts</strong> — See <code>docs/00-OVERVIEW.md</code></li>
-  <li><strong>Study the architecture</strong> — See <code>docs/03-ARCHITECTURE.md</code></li>
-  <li><strong>Walk through the code</strong> — See <code>docs/01-LAB-GUIDE.md</code></li>
-  <li><strong>Extend the project</strong> — See <code>docs/04-CHALLENGES.md</code></li>
-</ol>
-
 <h2>Common Issues</h2>
 
 <p><strong>Permission denied when capturing packets</strong></p>
