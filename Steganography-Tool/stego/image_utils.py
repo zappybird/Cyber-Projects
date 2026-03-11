@@ -21,9 +21,11 @@ def set_pixel(img, x, y, value):
     img.load()[x,y] = value
 
 img = load_image("path/to/image.png")
-print("Size:", img.size)
+print("Width:", img.width)
+print("Height:", img.height)
+print("Mode:", img.mode)
+img.save("test_output.png")
 
 print("Before:", get_pixel(img, 50, 50))
 set_pixel(img, 50, 50, (255, 0, 0))  # Set pixel to red
 print("After:", get_pixel(img, 50, 50))
-

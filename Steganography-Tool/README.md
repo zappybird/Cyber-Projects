@@ -1,0 +1,2 @@
+installing pillow 
+importing PIL 
