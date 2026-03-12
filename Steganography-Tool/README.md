@@ -1,3 +1,28 @@
+<h2>Project Overview</h2>
+
+<p>
+This project is an educational steganography tool that demonstrates how secret messages can be
+hidden inside digital images using the Least Significant Bit (LSB) technique. Steganography is the
+practice of concealing information within other seemingly harmless data—in this case, embedding
+binary message data inside the pixel values of an image. LSB steganography works by modifying only
+the lowest-value bit of each color channel (R, G, B), which results in changes so small that they
+are visually undetectable to the human eye.
+</p>
+
+<hr />
+
+<h2>Features</h2>
+
+<ul>
+  <li><strong>Encode:</strong> Hide a text message inside a PNG or BMP image.</li>
+  <li><strong>Decode:</strong> Extract a hidden message from a steganographic image.</li>
+  <li><strong>Password Protection:</strong> Optionally encrypt the message before embedding.</li>
+  <li><strong>PNG/BMP Support:</strong> Uses lossless formats to preserve hidden data.</li>
+  <li><strong>Command-Line Interface:</strong> Clean CLI for encoding and decoding operations.</li>
+</ul>
+
+<hr />
+
 <h2>Image Processing with Pillow</h2>
 
 <p>
