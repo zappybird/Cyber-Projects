@@ -4,14 +4,12 @@ from exceptions import StegoError, DecryptionError
 from image_utils import load_image
 
 
-def decode_message(image, password=None):
-    #Step 1: Extract the first 32 bits to get message length
-
+def decode_message(image, password: str| None = None) -> str:
+    #Step 1 and 2: extract the first 32 bits to get message length
     img = load_image(image)
 
-    #Step 1 and 2: extract the first 32 bits to get message length
-    length_bits = int(length_bits, 2)
-    message_length = int.from_bytes(length_bits, byteorder='big')
+    length_bits = lsb.extract_bits(img, 32)
+    message_length = int(length_bits, 2)
 
     #Step 3: extract message_length * 8 bits to get the message
     max_capacity = img.width * img.height * 3
