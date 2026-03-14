@@ -1,4 +1,6 @@
 import argparse
+from encoder import encode_message  # Placeholder import; implement encoder.py first.
+from decoder import decode_message  # Placeholder import; implement decoder.py first.
 
 # TODO: Add imports for encoder.py and decoder.py once they are implemented.
 # The CLI currently parses arguments but never calls any business logic.
