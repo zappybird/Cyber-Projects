@@ -1,121 +1,195 @@
-<h2>Project Overview</h2>
+# LSB Steganography Tool
 
-<p>
-This project is an educational steganography tool that demonstrates how secret messages can be
-hidden inside digital images using the Least Significant Bit (LSB) technique. Steganography is the
-practice of concealing information within other seemingly harmless data—in this case, embedding
-binary message data inside the pixel values of an image. LSB steganography works by modifying only
-the lowest-value bit of each color channel (R, G, B), which results in changes so small that they
-are visually undetectable to the human eye.
-</p>
+An educational Python tool for hiding secret messages inside images using the **Least Significant Bit (LSB)** technique. Built to demonstrate core concepts in cybersecurity, image processing, and Python software architecture.
 
-<hr />
+---
 
-<h2>Features</h2>
+## What Is Steganography?
 
-<ul>
-  <li><strong>Encode:</strong> Hide a text message inside a PNG or BMP image.</li>
-  <li><strong>Decode:</strong> Extract a hidden message from a steganographic image.</li>
-  <li><strong>Password Protection:</strong> Optionally encrypt the message before embedding.</li>
-  <li><strong>PNG/BMP Support:</strong> Uses lossless formats to preserve hidden data.</li>
-  <li><strong>Command-Line Interface:</strong> Clean CLI for encoding and decoding operations.</li>
-</ul>
+Think about cryptography for a second — encrypting a message in plain sight. Even if everyone knows the message has been sent, they can't figure out what it means.
 
-<hr />
+Steganography is a step further. We're not just scrambling the message — we're **hiding the fact that it's even there in the first place.**
 
-<h2>Image Processing with Pillow</h2>
+Like writing a message with invisible ink. Only the person receiving it would know to look. Anyone else reading it might find it interesting, but only the recipient can read the secret message hidden inside.
 
-<p>
-This project demonstrates how to perform basic image processing in Python using the Pillow library.
-By loading, inspecting, modifying, and saving images through a set of simple utility functions,
-this serves as a practical foundation for understanding pixel manipulation and image I/O in Python.
-</p>
+---
 
-<hr />
+## How LSB Works
 
-<h2>Objective</h2>
+The most simple form of steganography is **LSB — Least Significant Bit**.
 
-<ul>
-  <li>Install and import the Pillow imaging library.</li>
-  <li>Load an image from a file path and convert it to RGB.</li>
-  <li>Inspect image properties such as width, height, and mode.</li>
-  <li>Read and write individual pixel values.</li>
-  <li>Save a modified copy of the image to disk.</li>
-</ul>
+It refers to the rightmost bit in a binary number. It holds the lowest value, so it's the bit with the least amount of weight. That means we can change it to contain our encoded message and have a near imperceptible change on the actual image — visually, nothing looks different.
 
-<hr />
+We change the last bit (or last two bits) of every byte in the image. Every byte has 8 bits — so if we change the last two, the remaining six still come from the legitimate image. Those two changed bits carry our secret message.
 
-<h2>Installing Pillow</h2>
+**Example:** The color value `11001010` becomes `11001011` after embedding one bit. The color shifts by 1 out of 255 — completely invisible to the human eye.
 
-<h3>1. Install via pip</h3>
-<pre><code>pip install Pillow
-</code></pre>
+> **Why PNG and BMP only?** Formats like JPEG use lossy compression, which modifies pixel values during saving and destroys any hidden data. PNG and BMP are lossless — what you write is exactly what gets saved.
 
-<h3>2. Verify installation</h3>
-<pre><code>python -c "from PIL import Image; print('Pillow installed successfully')"
-</code></pre>
+---
 
-<hr />
+## Features
 
-<h2>Importing the Library</h2>
+- Hide a text message inside a PNG or BMP image
+- Extract a hidden message from an encoded image
+- Optional password-based encryption before embedding
+- Capacity validation — warns if the message is too large for the image
+- Clean command-line interface
 
-<pre><code>from PIL import Image
-</code></pre>
+---
 
-<p>Pillow exposes its functionality through the <code>PIL</code> namespace. The <code>Image</code> module is the core component used for opening, manipulating, and saving images.</p>
+## Project Status
 
-<hr />
+This project is currently **in active development**. The architecture and module structure are complete. Core logic (LSB embedding, encoding/decoding pipeline, encryption) is being implemented.
 
-<h2>Functions</h2>
+| Module | Status |
+|---|---|
+| `image_utils.py` | ✅ Complete |
+| `capacity.py` | ✅ Complete |
+| `exceptions.py` | ✅ Complete |
+| `lsb.py` | 🔧 In progress |
+| `encoder.py` | 🔧 In progress |
+| `decoder.py` | 🔧 In progress |
+| `crypto.py` | 🔧 In progress |
+| `cli.py` | 🔧 In progress |
 
-<h3>load_image(image_path, convert_to_rgb=True)</h3>
-<p>Loads an image from the specified file path. Optionally converts it to RGB mode, which is enabled by default. Raises an <code>IOError</code> if the image cannot be loaded.</p>
+---
 
-<pre><code>def load_image(image_path, convert_to_rgb=True):
-    try:
-        img = Image.open(image_path)
-        return img.convert('RGB') if convert_to_rgb else img
-    except Exception as e:
-        raise IOError(f"Error loading image: {e}")
-</code></pre>
+## Installation
 
-<h3>get_pixel(img, x, y)</h3>
-<p>Returns the RGB tuple of a pixel at coordinates <code>(x, y)</code> within the image.</p>
+**Requirements:** Python 3.8+
 
-<pre><code>def get_pixel(img, x, y):
-    return img.load()[x, y]
-</code></pre>
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/lsb-steganography.git
+cd lsb-steganography
+```
 
-<h3>set_pixel(img, x, y, value)</h3>
-<p>Sets the pixel at coordinates <code>(x, y)</code> to the specified RGB value.</p>
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-<pre><code>def set_pixel(img, x, y, value):
-    img.load()[x, y] = value
-</code></pre>
+3. Verify Pillow is installed:
+```bash
+python -c "from PIL import Image; print('Pillow installed successfully')"
+```
 
-<hr />
+---
 
-<h2>Usage</h2>
+## Usage
 
-<pre><code>img = load_image("path/to/image.png")
+> **Note:** CLI commands below reflect the intended interface. Full dispatch is being wired in.
 
-print("Width:", img.width)
-print("Height:", img.height)
-print("Mode:", img.mode)
+### Encode a message into an image
+```bash
+python cli.py encode input.png output.png "Your secret message"
+```
 
-img.save("test_output.png")
+### Encode with password protection
+```bash
+python cli.py encode input.png output.png "Your secret message" --password mypassword
+```
 
-print("Before:", get_pixel(img, 50, 50))
-set_pixel(img, 50, 50, (255, 0, 0))
-print("After:", get_pixel(img, 50, 50))
-</code></pre>
+### Decode a message from an image
+```bash
+python cli.py decode output.png
+```
 
-<p><strong>Parameter breakdown:</strong></p>
-<ul>
-  <li><strong>img.width</strong>: Pixel width of the loaded image</li>
-  <li><strong>img.height</strong>: Pixel height of the loaded image</li>
-  <li><strong>img.mode</strong>: Color mode of the image (e.g. <code>RGB</code>)</li>
-  <li><strong>test_output.png</strong>: Output filename the modified image is saved as</li>
-</ul>
+### Decode a password-protected message
+```bash
+python cli.py decode output.png --password mypassword
+```
 
-<p><strong>Note:</strong> <code>set_pixel</code> modifies the image in memory. Call <code>img.save()</code> afterward to persist any pixel changes to disk.</p>
+**Arguments:**
+
+| Argument | Description |
+|---|---|
+| `input.png` | Path to the original image (PNG or BMP) |
+| `output.png` | Path to save the encoded image |
+| `"message"` | The text to hide |
+| `--password` | Optional. Encrypts the message before embedding |
+
+---
+
+## Project Structure
+
+```
+lsb-steganography/
+│
+├── cli.py           # Command-line interface — parses args, dispatches to encoder/decoder
+├── encoder.py       # Encoding pipeline — converts message to bits and embeds into image
+├── decoder.py       # Decoding pipeline — extracts bits from image and reconstructs message
+├── lsb.py           # Core LSB logic — bit embedding and extraction at the pixel level
+├── crypto.py        # Optional encryption/decryption using a password
+├── capacity.py      # Calculates whether a message fits within a given image
+├── image_utils.py   # Image I/O utilities using Pillow (load, get/set pixel, save)
+├── exceptions.py    # Custom exception hierarchy (StegoError, CapacityError, DecryptionError)
+└── requirements.txt # Project dependencies
+```
+
+### How the modules connect
+
+```
+cli.py
+  └── encoder.py / decoder.py      ← orchestrates the pipeline
+        ├── capacity.py             ← validates message fits before embedding
+        ├── crypto.py               ← encrypts/decrypts if password provided
+        ├── lsb.py                  ← reads/writes bits at the pixel level
+        └── image_utils.py          ← loads and saves images via Pillow
+```
+
+---
+
+## How the Pipeline Works Internally
+
+**Encoding:**
+1. Convert the message string to bytes (`UTF-8`)
+2. Optionally encrypt the bytes using the provided password
+3. Convert bytes to a flat stream of bits
+4. Prepend a 32-bit header encoding the message length
+5. Iterate pixels left-to-right, top-to-bottom, writing one bit per channel (R, G, B)
+6. Save the modified image as PNG or BMP
+
+**Decoding:**
+1. Read the first 32 bits from the image to determine message length
+2. Extract that many bits from the subsequent pixels
+3. Reassemble bits into bytes, then decode back to a string
+4. Optionally decrypt using the provided password
+
+**Capacity formula:**
+```
+max_bits  = width × height × 3
+required  = 32 + (message_length_in_bytes × 8)
+```
+
+---
+
+## Contributing
+
+This is an educational project and contributions are welcome. If you'd like to help:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes with clear, commented code
+4. Open a pull request with a description of what you changed and why
+
+When contributing, please keep the educational intent in mind — clarity and readability are prioritized over cleverness.
+
+---
+
+## Learning Resources
+
+If you're exploring this project to learn, these resources cover the core concepts:
+
+- [Pillow documentation](https://pillow.readthedocs.io/en/stable/) — image processing in Python
+- [Python bitwise operators](https://realpython.com/python-bitwise-operators/) — essential for LSB manipulation
+- [Unicode and UTF-8 explained](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/) — why encoding matters
+- [Python argparse tutorial](https://docs.python.org/3/howto/argparse.html) — building CLIs
+- [Python custom exceptions](https://realpython.com/python-exceptions/) — clean error handling
+
+---
+
+## License
+
+MIT License. See `LICENSE` for details.

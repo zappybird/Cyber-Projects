@@ -3,5 +3,4 @@
 Pillow>=10.0.0
 cryptography>=42.0.0   # Required only if using password-based encryption in crypto.py
 
-# TODO: If additional modules are added (e.g., rich for CLI styling, pytest for testing),
-# list them here to ensure full reproducibility for contributors.
+# TODO: If additional modules are added 
