@@ -108,23 +108,23 @@ The standard for full-color images. Each pixel uses 3 bytes — one per channel 
 - Each channel: `0` (no contribution) → `255` (fully saturated)
 - Total possible colors: 256 × 256 × 256 = **16,777,216**
 
-![24-bit RGB channel breakdown](./images/rgb_24bit_components.png)
+![24-bit RGB channel breakdown](./rgb_24bit_components.png)
 
 RGB color space can also be visualized as a cube:
 
-![RGB color cube](./images/rgb_color_cube.png)
+![RGB color cube](./rgb_color_cube.png)
 
 ### 16-bit RGB
 
 Uses 5 bits per color channel with a 1-bit alpha channel.
 
-![16-bit RGB bit layout](./images/rgb_16bit_layout.png)
+![16-bit RGB bit layout](./rgb_16bit_layout.png)
 
 ### 32-bit RGBA
 
 Same as 24-bit RGB, with an extra 8-bit **alpha channel**.
 
-![32-bit RGBA channel layout](./images/rgb_32bit_alpha_channel.png)
+![32-bit RGBA channel layout](./rgb_32bit_alpha_channel.png)
 
 > **Note:** Images are loaded and processed in **RGB mode** (24-bit, no alpha).  
 > Any alpha channel present in the source file is discarded on load.
@@ -176,6 +176,6 @@ JPEG destroys LSBs during compression, corrupting hidden data.
 Resolution determines the physical size of a bitmap. Pixels themselves have no size — resolution
 defines how many pixels fit into a physical inch.
 
-![Resolution PPI comparison](./images/resolution_ppi_diagram.png)
+![Resolution PPI comparison](./resolution_ppi_diagram.png)
 
 Resolution does **not** affect steganographic capacity or hidden data.
