@@ -17,19 +17,16 @@ def required_capacity(message_bytes):
     """Calculate the number of bits required to hide the message."""
     return 32 + len(message_bytes) * 8  # Each byte is 8 bits
 
-    # TODO: Implement a `check_fits(image, message_bytes)` helper that wraps
-    # `calculate_capacity` and `required_capacity`. It should raise CapacityError
-    # (from exceptions.py) when the message exceeds available capacity. This keeps
-    # encoder.py cleaner by centralizing the size‑checking logic.
 
+    check_fits(image, message_bytes):
+    capacity = calculate_capacity(image)
+    required = required_capacity(message_bytes)
+    if required > capacity:
+        raise CapacityError(f"Message requires {required} bits")
 
 
 if __name__ == "__main__":
     from image_utils import load_image
-    
-    # TODO: Replace "path/to/image.png" with an actual test image before running
-    # this script, or add a note explaining that this placeholder path will cause
-    # load_image() to fail until updated.
 
     img = load_image("path/to/image.png")
     capacity = calculate_capacity(img)
